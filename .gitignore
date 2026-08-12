@@ -1,0 +1,20 @@
+# 依赖（package.json 可复原）
+node_modules/
+
+# Android 构建产物
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+*.keystore
+
+# APK 安装包（通过 GitHub Releases 发布，不入库）
+*.apk
+
+# 助手工作数据
+.codebuddy/
+.playwright-cli/
+
+# 系统文件
+.DS_Store

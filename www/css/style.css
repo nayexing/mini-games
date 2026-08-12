@@ -1,0 +1,652 @@
+/* ========== 经典原版 2048 配色与全局样式 ========== */
+:root {
+  --bg: #faf8ef;
+  --text: #776e65;
+  --text-light: #f9f6f2;
+  --board-bg: #bbada0;
+  --cell-bg: #cdc1b4;
+  --btn-brown: #8f7b66;
+  --btn-light: #eee4da;
+  --gold: #edc22e;
+  --gold-dark: #d9a41b;
+  --hint: #a89a8c;
+  --tile-ms: 0.11s; /* 方块滑动过渡时长，由动画速度档位驱动 */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+  overscroll-behavior: none;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: calc(20px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== 顶部标题与分数卡片 ========== */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  margin: 0;
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.scores {
+  display: flex;
+  gap: 8px;
+}
+
+.score-box {
+  background: var(--board-bg);
+  color: var(--text-light);
+  border-radius: 6px;
+  padding: 6px 14px;
+  min-width: 68px;
+  text-align: center;
+}
+
+.score-label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 1px;
+  opacity: 0.8;
+}
+
+.score-value {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.score-box.bump .score-value {
+  animation: bump 0.3s ease;
+}
+
+@keyframes bump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+/* ========== 控制按钮与尺寸切换 ========== */
+.controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.controls .btn {
+  flex: 1;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.btn {
+  border: none;
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.08s ease, opacity 0.15s ease;
+}
+
+.btn:active {
+  transform: scale(0.94);
+}
+
+.btn-primary {
+  background: var(--btn-brown);
+  color: #fff;
+}
+
+.btn-secondary {
+  background: var(--btn-light);
+  color: var(--text);
+}
+
+/* ========== 道具栏 ========== */
+.tools {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.tool-btn {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 0 7px;
+  border: 2px solid var(--board-bg);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.tool-btn:active {
+  transform: scale(0.94);
+}
+
+.tool-btn svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.tool-name {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.tool-btn .badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.tool-btn.used {
+  opacity: 0.45;
+}
+
+.tool-btn.used .badge {
+  background: var(--cell-bg);
+  color: var(--text-light);
+}
+
+.tool-btn.aiming {
+  border-color: var(--gold);
+  background: rgba(237, 194, 46, 0.16);
+}
+
+/* ========== 棋盘 ========== */
+.board-wrap {
+  margin-top: 18px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 视觉重心上调：底部补偿留白，使棋盘位于剩余空间约 45% 高度处（非几何居中） */
+  padding-bottom: 5vh;
+}
+
+.board {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: var(--board-bg);
+  border-radius: 10px;
+  touch-action: none;
+}
+
+/* 瞄准态：金色呼吸边框提示「点选一个方块」 */
+.board.aiming {
+  animation: aimPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes aimPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(237, 194, 46, 0.95); }
+  50% { box-shadow: 0 0 0 6px rgba(237, 194, 46, 0.35); }
+}
+
+.grid-cells {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-auto-rows: 1fr;
+}
+
+.cell {
+  background: var(--cell-bg);
+  border-radius: 6px;
+}
+
+.tiles {
+  position: absolute;
+  inset: 0;
+}
+
+/* 方块外层负责定位与滑动过渡，内层负责配色与缩放动画（避免 transform 冲突） */
+.tile {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  transition: transform var(--tile-ms) ease-in-out;
+}
+
+.tile-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-weight: 700;
+  color: var(--text);
+  background: #eee4da;
+}
+
+.tile-new .tile-inner {
+  animation: appear 0.16s ease;
+}
+
+.tile-merged {
+  z-index: 2;
+}
+
+.tile-merged .tile-inner {
+  animation: pop 0.18s ease;
+}
+
+.tile-consumed {
+  z-index: 0;
+}
+
+@keyframes appear {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+/* ========== 经典数值配色 ========== */
+.tile-2    { background: #eee4da; }
+.tile-4    { background: #ede0c8; }
+.tile-8    { background: #f2b179; color: var(--text-light); }
+.tile-16   { background: #f59563; color: var(--text-light); }
+.tile-32   { background: #f67c5f; color: var(--text-light); }
+.tile-64   { background: #f65e3b; color: var(--text-light); }
+.tile-128  { background: #edcf72; color: var(--text-light); box-shadow: 0 0 12px rgba(243, 215, 116, 0.35); }
+.tile-256  { background: #edcc61; color: var(--text-light); box-shadow: 0 0 14px rgba(243, 215, 116, 0.45); }
+.tile-512  { background: #edc850; color: var(--text-light); box-shadow: 0 0 16px rgba(243, 215, 116, 0.5); }
+.tile-1024 { background: #edc53f; color: var(--text-light); box-shadow: 0 0 18px rgba(243, 215, 116, 0.55); }
+.tile-2048 { background: var(--gold); color: var(--text-light); box-shadow: 0 0 20px rgba(237, 194, 46, 0.6); }
+.tile-super { background: #3c3a32; color: var(--text-light); }
+
+/* ========== 全屏弹窗（胜负与设置共用背板/卡片） ========== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(59, 53, 46, 0.6);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+
+.modal-backdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 340px;
+  background: var(--bg);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+  padding: 24px 22px;
+  transform: translateY(14px);
+  transition: transform 0.22s ease;
+}
+
+.modal-backdrop.show .modal-card {
+  transform: translateY(0);
+}
+
+/* ---- 胜负卡片 ---- */
+.overlay-card {
+  text-align: center;
+}
+
+.overlay-title {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.modal-backdrop.win .overlay-title {
+  color: var(--gold-dark);
+}
+
+.modal-backdrop.lose .overlay-title {
+  color: #3b352e;
+}
+
+.overlay-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* ---- 设置卡片 ---- */
+.modal-title {
+  margin: 0 0 18px;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.setting-group {
+  margin-bottom: 16px;
+}
+
+.setting-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.setting-note {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(237, 194, 46, 0.2);
+  color: var(--gold-dark);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.setting-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.setting-options button {
+  border: 2px solid var(--board-bg);
+  background: transparent;
+  color: var(--text);
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.setting-options button.active {
+  background: var(--board-bg);
+  color: var(--text-light);
+}
+
+.modal-close {
+  width: 100%;
+  margin-top: 6px;
+}
+
+/* ========== 提示文案 ========== */
+.hint {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--hint);
+}
+
+/* ========== 开始页 ========== */
+.start-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 40; /* 低于弹窗背板(50)，高于游戏容器 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(24px + env(safe-area-inset-top)) calc(24px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left));
+  background: var(--bg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+
+.start-screen.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.start-inner {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.start-logo {
+  display: grid;
+  grid-template-columns: repeat(2, 44px);
+  grid-auto-rows: 44px;
+  gap: 6px;
+  padding: 8px;
+  background: var(--board-bg);
+  border-radius: 12px;
+  animation: logoPop 0.4s ease;
+}
+
+@keyframes logoPop {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.start-logo-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.start-logo-tile.t2 { background: #eee4da; }
+.start-logo-tile.t4 { background: #ede0c8; }
+.start-logo-tile.t8 { background: #f2b179; color: var(--text-light); }
+.start-logo-tile.t16 { background: #f59563; color: var(--text-light); font-size: 15px; }
+
+.start-title {
+  margin: 18px 0 0;
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.start-subtitle {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--hint);
+}
+
+.start-size-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+  margin-top: 26px;
+}
+
+.start-size-grid button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 0 14px;
+  border: 2px solid var(--board-bg);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.start-size-grid button:active {
+  transform: scale(0.96);
+}
+
+.start-size-grid button.active {
+  background: var(--board-bg);
+  color: var(--text-light);
+  box-shadow: 0 0 0 3px rgba(237, 194, 46, 0.55);
+}
+
+.size-num {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.size-label {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.start-btn {
+  width: 100%;
+  margin-top: 26px;
+  padding: 14px 0;
+  font-size: 17px;
+}
+
+/* ========== 矮屏/横屏适配：压缩间距，棋盘随高度缩小，避免内容被裁切 ========== */
+@media (max-height: 620px) {
+  .container {
+    padding-top: calc(10px + env(safe-area-inset-top));
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .title {
+    font-size: 32px;
+  }
+
+  .controls {
+    margin-top: 10px;
+  }
+
+  .tools {
+    margin-top: 10px;
+  }
+
+  .tool-btn {
+    padding: 6px 0 5px;
+  }
+
+  .tool-btn svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .board-wrap {
+    margin-top: 10px;
+    padding-bottom: 1vh;
+  }
+
+  .board {
+    width: min(100%, calc(100vh - 200px));
+    width: min(100%, calc(100dvh - 200px));
+  }
+
+  .hint {
+    margin-top: 8px;
+  }
+
+  /* 开始页矮屏适配：压缩间距与 logo 尺寸 */
+  .start-logo {
+    grid-template-columns: repeat(2, 34px);
+    grid-auto-rows: 34px;
+    gap: 5px;
+    padding: 6px;
+  }
+
+  .start-logo-tile {
+    font-size: 14px;
+  }
+
+  .start-logo-tile.t16 {
+    font-size: 12px;
+  }
+
+  .start-title {
+    margin-top: 12px;
+    font-size: 44px;
+  }
+
+  .start-size-grid {
+    margin-top: 16px;
+    gap: 10px;
+  }
+
+  .start-size-grid button {
+    padding: 10px 0 9px;
+  }
+
+  .size-num {
+    font-size: 19px;
+  }
+
+  .start-btn {
+    margin-top: 16px;
+    padding: 11px 0;
+  }
+}

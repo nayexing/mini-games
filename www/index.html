@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#faf8ef">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23bbada0'/%3E%3Crect x='7' y='7' width='23' height='23' rx='4' fill='%23eee4da'/%3E%3Crect x='34' y='7' width='23' height='23' rx='4' fill='%23ede0c8'/%3E%3Crect x='7' y='34' width='23' height='23' rx='4' fill='%23f2b179'/%3E%3Crect x='34' y='34' width='23' height='23' rx='4' fill='%23f59563'/%3E%3C/svg%3E">
+  <title>2048</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">2048</h1>
+      <div class="scores">
+        <div class="score-box" id="score-box">
+          <span class="score-label">分数</span>
+          <span class="score-value" id="score">0</span>
+        </div>
+        <div class="score-box">
+          <span class="score-label">最高分</span>
+          <span class="score-value" id="best">0</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="controls">
+      <button type="button" id="btn-home" class="btn btn-secondary">主页</button>
+      <button type="button" id="btn-new" class="btn btn-primary">新游戏</button>
+      <button type="button" id="btn-undo" class="btn btn-secondary">撤销</button>
+      <button type="button" id="btn-settings" class="btn btn-secondary">设置</button>
+    </div>
+
+    <div class="tools" id="tools">
+      <button type="button" id="tool-hammer" class="tool-btn" aria-label="锤子：敲除任意一个方块">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 12-8.5 8.5a2.12 2.12 0 1 1-3-3L12 9"/><path d="m17.6 15 4-4"/><path d="m21.6 11.6-2.05-2.05a2 2 0 0 1-.59-1.42V7l-2.22-2.22a6 6 0 0 0-4.24-1.76L9.8 2.9l.85.85A6.2 6.2 0 0 1 12.5 8.3V10l2.5 2.5h1.13a2 2 0 0 1 1.42.59l2.05 2.05"/></svg>
+        <span class="tool-name">锤子</span>
+        <span class="badge">1</span>
+      </button>
+      <button type="button" id="tool-shuffle" class="tool-btn" aria-label="洗牌：随机重排所有方块">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h1.97a4 4 0 0 0 3.3-1.7l5.46-8.6a4 4 0 0 1 3.3-1.7H22"/><path d="M2 6h1.97a4 4 0 0 1 3.6 2.2"/><path d="M22 18h-6.04a4 4 0 0 1-3.3-1.8l-.36-.45"/></svg>
+        <span class="tool-name">洗牌</span>
+        <span class="badge">1</span>
+      </button>
+      <button type="button" id="tool-refresh" class="tool-btn" aria-label="刷新：把一个方块重新随机为 2 或 4">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+        <span class="tool-name">刷新</span>
+        <span class="badge">1</span>
+      </button>
+    </div>
+
+    <div class="board-wrap">
+      <div class="board" id="board">
+        <div class="grid-cells" id="grid-cells"></div>
+        <div class="tiles" id="tiles"></div>
+      </div>
+    </div>
+
+    <p class="hint" id="hint">滑动屏幕，合并相同数字，冲击 2048</p>
+  </div>
+
+  <!-- 胜负：全屏遮罩 + 居中卡片弹窗 -->
+  <div class="modal-backdrop" id="overlay">
+    <div class="modal-card overlay-card">
+      <div class="overlay-title" id="overlay-message"></div>
+      <div class="overlay-buttons">
+        <button type="button" id="btn-continue" class="btn btn-primary">继续游戏</button>
+        <button type="button" id="btn-retry" class="btn btn-secondary">再来一局</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置：全屏遮罩 + 居中卡片弹窗 -->
+  <div class="modal-backdrop" id="settings-modal">
+    <div class="modal-card settings-card">
+      <h2 class="modal-title">设置</h2>
+
+      <div class="setting-group" data-setting="sensitivity">
+        <div class="setting-label">滑动灵敏度</div>
+        <div class="setting-options">
+          <button type="button" data-value="low">低</button>
+          <button type="button" data-value="standard">标准</button>
+          <button type="button" data-value="high">高</button>
+        </div>
+      </div>
+
+      <div class="setting-group" data-setting="difficulty">
+        <div class="setting-label">
+          游戏难度
+          <span class="setting-note" id="difficulty-note">新游戏后生效</span>
+        </div>
+        <div class="setting-options">
+          <button type="button" data-value="easy">轻松</button>
+          <button type="button" data-value="standard">标准</button>
+          <button type="button" data-value="hard">困难</button>
+          <button type="button" data-value="expert">专家</button>
+        </div>
+      </div>
+
+      <div class="setting-group" data-setting="target">
+        <div class="setting-label">胜利目标</div>
+        <div class="setting-options">
+          <button type="button" data-value="1024">1024</button>
+          <button type="button" data-value="2048">2048</button>
+          <button type="button" data-value="4096">4096</button>
+        </div>
+      </div>
+
+      <div class="setting-group" data-setting="animSpeed">
+        <div class="setting-label">动画速度</div>
+        <div class="setting-options">
+          <button type="button" data-value="fast">快</button>
+          <button type="button" data-value="standard">标准</button>
+          <button type="button" data-value="slow">慢</button>
+        </div>
+      </div>
+
+      <button type="button" id="btn-settings-close" class="btn btn-primary modal-close">完成</button>
+    </div>
+  </div>
+
+  <!-- 开始页：无存档时显示，选择棋盘大小后开局 -->
+  <div class="start-screen" id="start-screen">
+    <div class="start-inner">
+      <div class="start-logo" aria-hidden="true">
+        <span class="start-logo-tile t2">2</span>
+        <span class="start-logo-tile t4">4</span>
+        <span class="start-logo-tile t8">8</span>
+        <span class="start-logo-tile t16">16</span>
+      </div>
+      <h1 class="start-title">2048</h1>
+      <p class="start-subtitle">选择棋盘大小</p>
+      <div class="start-size-grid" id="start-size-grid">
+        <button type="button" data-size="3"><span class="size-num">3×3</span><span class="size-label">紧凑</span></button>
+        <button type="button" data-size="4"><span class="size-num">4×4</span><span class="size-label">经典</span></button>
+        <button type="button" data-size="5"><span class="size-num">5×5</span><span class="size-label">进阶</span></button>
+        <button type="button" data-size="6"><span class="size-num">6×6</span><span class="size-label">挑战</span></button>
+      </div>
+      <button type="button" id="btn-start" class="btn btn-primary start-btn">开始游戏</button>
+    </div>
+  </div>
+
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>2048 icon generator</title>
+</head>
+<body>
+<script>
+/**
+ * 2048 图标程序化生成：2×2 圆角色块（2/4/8/16 原版配色）
+ * window.__genIcons() 返回 { 文件名: dataURL }，覆盖三变体 × 五档分辨率
+ */
+(function () {
+  'use strict';
+
+  var BG = '#FAF8EF';        // 与游戏底色/启动画面一致
+  var BOARD = '#bbada0';
+  var TILES = [
+    { v: '2',  bg: '#eee4da', fg: '#776e65' },
+    { v: '4',  bg: '#ede0c8', fg: '#776e65' },
+    { v: '8',  bg: '#f2b179', fg: '#f9f6f2' },
+    { v: '16', bg: '#f59563', fg: '#f9f6f2' }
+  ];
+
+  function roundRect(ctx, x, y, w, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + w, r);
+    ctx.arcTo(x + w, y + w, x, y + w, r);
+    ctx.arcTo(x, y + w, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  /** 在中央绘制 2×2 棋盘格，B 为棋盘组边长；圆角 0.14B 保证整体落在 adaptive 安全圆内 */
+  function drawBoard(ctx, S, B) {
+    var x0 = (S - B) / 2;
+    var y0 = (S - B) / 2;
+    ctx.fillStyle = BOARD;
+    roundRect(ctx, x0, y0, B, B * 0.14);
+    ctx.fill();
+
+    var P = B * 0.08;   // 棋盘内边距
+    var G = B * 0.055;  // 方块间隙
+    var T = (B - 2 * P - G) / 2;
+    for (var i = 0; i < 4; i++) {
+      var tx = x0 + P + (i % 2) * (T + G);
+      var ty = y0 + P + Math.floor(i / 2) * (T + G);
+      ctx.fillStyle = TILES[i].bg;
+      roundRect(ctx, tx, ty, T, T * 0.14);
+      ctx.fill();
+      ctx.fillStyle = TILES[i].fg;
+      ctx.font = '700 ' + Math.round(T * (TILES[i].v.length > 1 ? 0.42 : 0.52)) + 'px "Helvetica Neue", Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(TILES[i].v, tx + T / 2, ty + T / 2 + T * 0.03);
+    }
+  }
+
+  /**
+   * variant: foreground(透明底) | square(全幅底色) | round(圆形底色)
+   * 前景安全区：棋盘 0.5S + 圆角 0.14B，整体位于中央 66% 安全圆内
+   */
+  function render(S, variant) {
+    var canvas = document.createElement('canvas');
+    canvas.width = S;
+    canvas.height = S;
+    var ctx = canvas.getContext('2d');
+    if (variant === 'square') {
+      ctx.fillStyle = BG;
+      ctx.fillRect(0, 0, S, S);
+      drawBoard(ctx, S, S * 0.62);
+    } else if (variant === 'round') {
+      ctx.fillStyle = BG;
+      ctx.beginPath();
+      ctx.arc(S / 2, S / 2, S / 2, 0, Math.PI * 2);
+      ctx.fill();
+      drawBoard(ctx, S, S * 0.62);
+    } else {
+      drawBoard(ctx, S, S * 0.5);
+    }
+    return canvas.toDataURL('image/png');
+  }
+
+  window.__genIcons = function () {
+    var out = {};
+    var densities = { mdpi: 1, hdpi: 1.5, xhdpi: 2, xxhdpi: 3, xxxhdpi: 4 };
+    for (var d in densities) {
+      var f = densities[d];
+      out[d + '/ic_launcher.png'] = render(Math.round(48 * f), 'square');
+      out[d + '/ic_launcher_round.png'] = render(Math.round(48 * f), 'round');
+      out[d + '/ic_launcher_foreground.png'] = render(Math.round(108 * f), 'foreground');
+    }
+    return JSON.stringify(out);
+  };
+})();
+</script>
+</body>
+</html>
