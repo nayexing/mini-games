@@ -242,7 +242,7 @@
       } else {
         var inner = el.firstChild;
         var cls = valueClass(t.value);
-        if (!inner.classList.contains(cls)) {
+        if (inner.textContent !== String(t.value)) {
           inner.className = 'tile-inner ' + cls;
           inner.textContent = t.value;
           inner.style.fontSize = fontSizeFor(t.value) + 'px';
