@@ -8,10 +8,13 @@
   var DIRECTIONS = ['up', 'down', 'left', 'right'];
   var OPPOSITE = { up: 'down', down: 'up', left: 'right', right: 'left' };
 
+  /** 各尺寸打乱步数（随尺寸递增，保证打乱充分） */
+  var SHUFFLE_STEPS = { 3: 80, 4: 200, 5: 400, 6: 600, 7: 850, 8: 1100, 9: 1400, 10: 1700 };
+
   function HuarongDao(size) {
     size = size === undefined ? 4 : size;
-    if (!Number.isInteger(size) || size < 3 || size > 5) {
-      throw new Error('size must be an integer between 3 and 5');
+    if (!Number.isInteger(size) || size < 3 || size > 10) {
+      throw new Error('size must be an integer between 3 and 10');
     }
     this.size = size;
     this.reset();
@@ -31,10 +34,10 @@
 
   /**
    * 随机合法移动打乱：从已解状态出发，天然保证可解；
-   * 禁止连续反向移动保证打乱质量；步数随尺寸递增（约 80/200/400 步）
+   * 禁止连续反向移动保证打乱质量；步数随尺寸递增（80~1700 步）
    */
   HuarongDao.prototype.shuffle = function () {
-    var steps = this.size === 3 ? 80 : this.size === 4 ? 200 : 400;
+    var steps = SHUFFLE_STEPS[this.size];
     do {
       var lastDir = null;
       for (var s = 0; s < steps; s++) {
@@ -91,40 +94,47 @@
   };
 
   /**
-   * 滑动：dir 为滑块移动方向（'up' 即空格下方的块向上移入空格）
-   * 返回 { moved, tile: { value, from, to } | null }，无效方向返回 moved:false
+   * 滑动（连滑）：dir 为滑块移动方向（'up' 即空格下方的整列块一起上移）。
+   * 空格沿反方向连续移动到该行/列边缘，途中所有块依次反向滑动一格。
+   * 一次操作计 1 步。返回 { moved, tiles: [{ value, from, to }…] }，无法移动返回 moved:false
    */
   HuarongDao.prototype.slide = function (dir) {
     if (DIRECTIONS.indexOf(dir) === -1) throw new Error('invalid direction: ' + dir);
     var blankDir = OPPOSITE[dir]; // 块往 dir 移 = 空格往反方向移
-    if (!this.canMoveBlank(blankDir)) return { moved: false, tile: null };
+    if (!this.canMoveBlank(blankDir)) return { moved: false, tiles: [] };
     this.saveSnapshot();
-    var info = this.moveBlankRaw(blankDir);
+    var tiles = [];
+    var info;
+    while ((info = this.moveBlankRaw(blankDir))) tiles.push(info);
     this.moves++;
-    return { moved: true, tile: info };
+    return { moved: true, tiles: tiles };
   };
 
   /**
-   * 点击 index 格：该格有块且与空格相邻则移入空格
-   * 返回 { moved, tile: { value, from, to } | null }
+   * 点击 index 格（连滑）：该块与空格同行或同列时，两者之间的所有块（含被点击块）
+   * 一起朝空格方向滑动一格，空格落至被点击块原位置；否则不动。
+   * 一次操作计 1 步。返回 { moved, tiles: [{ value, from, to }…] }
    */
   HuarongDao.prototype.tapCell = function (index) {
     var len = this.size * this.size;
-    if (!Number.isInteger(index) || index < 0 || index >= len) return { moved: false, tile: null };
-    if (index === this.blank) return { moved: false, tile: null };
+    if (!Number.isInteger(index) || index < 0 || index >= len) return { moved: false, tiles: [] };
+    if (index === this.blank) return { moved: false, tiles: [] };
     var r = Math.floor(index / this.size);
     var c = index % this.size;
     var br = Math.floor(this.blank / this.size);
     var bc = this.blank % this.size;
-    if (Math.abs(r - br) + Math.abs(c - bc) !== 1) return { moved: false, tile: null }; // 不与空格相邻
+    if (r !== br && c !== bc) return { moved: false, tiles: [] }; // 非同行同列不可移
+    var dir = r === br ? (c > bc ? 'right' : 'left') : (r > br ? 'down' : 'up'); // 空格走向被点击块
     this.saveSnapshot();
-    var value = this.board[index];
-    this.board[this.blank] = value;
-    this.board[index] = 0;
-    var info = { value: value, from: index, to: this.blank };
-    this.blank = index;
+    var tiles = [];
+    while (this.blank !== index) {
+      var info = this.moveBlankRaw(dir);
+      if (!info) break; // 防御兜底（同行/同列逐格走必合法，正常不可达）
+      tiles.push(info);
+    }
+    if (!tiles.length) return { moved: false, tiles: [] };
     this.moves++;
-    return { moved: true, tile: info };
+    return { moved: true, tiles: tiles };
   };
 
   /** 是否复原（1..n²-1 顺序排列，空格在末位） */

@@ -115,6 +115,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 3px;
+  background: var(--hr-wood);
+  color: #6B4F2E;
   font-size: 9px;
   font-weight: 700;
 }

@@ -37,6 +37,7 @@
   var startScreenEl = document.getElementById('start-screen');
   var startSizeGrid = document.getElementById('start-size-grid');
   var btnStart = document.getElementById('btn-start');
+  var btnStartHome = document.getElementById('btn-start-home');
   var settingsModal = document.getElementById('settings-modal');
   var btnSettingsClose = document.getElementById('btn-settings-close');
   var difficultyNote = document.getElementById('difficulty-note');
@@ -312,7 +313,7 @@
     var groups = settingsModal.querySelectorAll('.setting-group');
     for (var i = 0; i < groups.length; i++) {
       var name = groups[i].dataset.setting;
-      var current = name === 'size' ? size : settings[name]; // 棋盘大小实时反映当前对局
+      var current = settings[name];
       var btns = groups[i].querySelectorAll('button[data-value]');
       for (var j = 0; j < btns.length; j++) {
         btns[j].classList.toggle('active', btns[j].dataset.value === String(current));
@@ -349,15 +350,6 @@
 
   function setSetting(name, value) {
     if (name === 'target') value = Number(value);
-    // 棋盘大小：不进设置存储（由存档/last_size 决定），切换即开新对局
-    if (name === 'size') {
-      value = Number(value);
-      if (value !== size && VALID_SIZES.indexOf(value) !== -1) {
-        closeSettings();
-        switchSize(value);
-      }
-      return;
-    }
     if (settings[name] === value) return;
     settings[name] = value;
     storage.set(SETTINGS_KEY, settings);
@@ -551,7 +543,7 @@
   /** 主页：返回合集菜单（保留对局进度，回来可继续） */
   function goHome() {
     saveGame();
-    window.location.href = 'index.html';
+    window.location.href = '../index.html';
   }
 
   /* ---------- 手势：公共滑动识别器（触摸与鼠标统一处理） ---------- */
@@ -599,7 +591,7 @@
 
   /* ---------- 按钮 ---------- */
   btnHome.addEventListener('click', goHome);
-  btnNew.addEventListener('click', newGame);
+  btnNew.addEventListener('click', showStartScreen); // 新游戏先弹开始页选棋盘尺寸
   btnRetry.addEventListener('click', newGame);
   btnContinue.addEventListener('click', hideOverlay);
   btnSettings.addEventListener('click', openSettings);
@@ -625,6 +617,9 @@
   });
   btnStart.addEventListener('click', function () {
     startGameWithSize(pendingSize);
+  });
+  btnStartHome.addEventListener('click', function () {
+    window.location.href = '../index.html'; // 返回合集菜单（对局存档保留）
   });
   toolBtns.hammer.addEventListener('click', function () { toggleAim('hammer'); });
   toolBtns.refresh.addEventListener('click', function () { toggleAim('refresh'); });

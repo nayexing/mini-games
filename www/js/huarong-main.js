@@ -7,7 +7,7 @@
   var storage = MGStorage.create('huarong_');
   var SETTINGS_KEY = 'settings';
   var SAVE_KEY = 'save';
-  var VALID_SIZES = [3, 4, 5];
+  var VALID_SIZES = [3, 4, 5, 6, 7, 8, 9, 10];
 
   /* 设置档位表 */
   var SENSITIVITY = { low: 32, standard: 20, high: 12 }; // 滑动判定阈值(px)
@@ -39,6 +39,7 @@
   var startScreenEl = document.getElementById('start-screen');
   var startSizeGrid = document.getElementById('start-size-grid');
   var btnStart = document.getElementById('btn-start');
+  var btnStartHome = document.getElementById('btn-start-home');
   var settingsModal = document.getElementById('settings-modal');
   var btnSettingsClose = document.getElementById('btn-settings-close');
 
@@ -104,18 +105,8 @@
     return value < 10 ? Math.round(metrics.cell * 0.44) : Math.round(metrics.cell * 0.38);
   }
 
-  /** 暖色渐变配色：数值越大颜色越深（复原后棋盘呈左上浅右下深的对角渐变） */
-  function tileColors(value) {
-    var max = size * size - 1;
-    var t = (value - 1) / (max - 1);
-    var h = Math.round(36 - t * 8);
-    var s = Math.round(30 + t * 42);
-    var l = Math.round(83 - t * 35);
-    return {
-      bg: 'hsl(' + h + ', ' + s + '%, ' + l + '%)',
-      fg: l > 60 ? '#776e65' : '#f9f6f2'
-    };
-  }
+  /* 统一橡木配色：底色由 CSS .hr-tile（--hr-wood）提供，此处仅保留深棕文字色 */
+  var OAK_FG = '#6B4F2E';
 
   function place(el, row, col) {
     el.dataset.row = row;
@@ -149,9 +140,7 @@
     var inner = document.createElement('div');
     inner.className = 'tile-inner hr-tile';
     inner.textContent = t.value;
-    var c = tileColors(t.value);
-    inner.style.background = c.bg;
-    inner.style.color = c.fg;
+    inner.style.color = OAK_FG;
     inner.style.fontSize = fontSizeFor(t.value) + 'px';
     el.appendChild(inner);
     sizeAndPlace(el, t.row, t.col);
@@ -175,11 +164,13 @@
     }
   }
 
-  /** 单步增量渲染：仅移动的块换位置（O(1)，transform 过渡自动补间，支持连滑） */
-  function renderSlide(tile) {
-    var el = tileEls.get(tile.value);
-    if (!el) { renderAll(false); return; }
-    place(el, Math.floor(tile.to / size), tile.to % size);
+  /** 增量渲染：仅本次移动的块换位置（transform 过渡并行补间，连滑多块同时动画） */
+  function renderSlide(tiles) {
+    for (var i = 0; i < tiles.length; i++) {
+      var el = tileEls.get(tiles[i].value);
+      if (!el) { renderAll(false); return; }
+      place(el, Math.floor(tiles[i].to / size), tiles[i].to % size);
+    }
   }
 
   /* ---------- 统计与计时 ---------- */
@@ -253,7 +244,7 @@
   function afterMove(result) {
     if (!result.moved) return;
     startTimer(); // 首次移动启动计时
-    renderSlide(result.tile);
+    renderSlide(result.tiles);
     refreshStats(true);
     saveGame();
     if (game.isSolved()) finishGame();
@@ -398,12 +389,12 @@
   /* ---------- 按钮 ---------- */
   btnHome.addEventListener('click', function () {
     saveGame();
-    window.location.href = 'index.html';
+    window.location.href = '../index.html';
   });
-  btnNew.addEventListener('click', newGame);
-  btnWinRetry.addEventListener('click', newGame);
+  btnNew.addEventListener('click', showStartScreen); // 新游戏先弹开始页选棋盘尺寸
+  btnWinRetry.addEventListener('click', newGame);    // 胜利弹窗：同尺寸直接重开
   btnWinHome.addEventListener('click', function () {
-    window.location.href = 'index.html';
+    window.location.href = '../index.html';
   });
   btnUndo.addEventListener('click', function () {
     if (finished) return;
@@ -431,6 +422,9 @@
   });
   btnStart.addEventListener('click', function () {
     startGameWithSize(pendingSize);
+  });
+  btnStartHome.addEventListener('click', function () {
+    window.location.href = '../index.html'; // 返回合集菜单（对局存档保留）
   });
 
   var settingGroups = settingsModal.querySelectorAll('.setting-group');

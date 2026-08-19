@@ -5,8 +5,9 @@
   font-size: 28px;
 }
 
-/* ---- 滑块：轻阴影增加质感（配色由 JS 按 value 计算暖色渐变，越大越深） ---- */
+/* ---- 滑块：浅橡木纯色（--hr-wood 定义于 common.css），轻阴影增加质感 ---- */
 .hr-tile {
+  background: var(--hr-wood);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.14);
 }
 
@@ -58,7 +59,7 @@
   font-weight: 700;
 }
 
-/* ========== 开始页 logo：3×3 迷你华容道（1-8 + 空格，暖色渐变） ========== */
+/* ========== 开始页 logo：3×3 迷你华容道（浅橡木纯色 + 数字 1-8，右下空格） ========== */
 .hr-logo {
   display: grid;
   grid-template-columns: repeat(3, 38px);
@@ -75,20 +76,12 @@
   align-items: center;
   justify-content: center;
   border-radius: 6px;
+  background: var(--hr-wood);
+  color: #6B4F2E;
   font-size: 16px;
   font-weight: 700;
-  color: var(--text);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
-
-.hr-logo span:nth-child(1) { background: hsl(36, 30%, 83%); }
-.hr-logo span:nth-child(2) { background: hsl(35, 36%, 78%); }
-.hr-logo span:nth-child(3) { background: hsl(34, 42%, 73%); }
-.hr-logo span:nth-child(4) { background: hsl(33, 48%, 68%); color: var(--text-light); }
-.hr-logo span:nth-child(5) { background: hsl(31, 54%, 63%); color: var(--text-light); }
-.hr-logo span:nth-child(6) { background: hsl(30, 60%, 58%); color: var(--text-light); }
-.hr-logo span:nth-child(7) { background: hsl(29, 66%, 53%); color: var(--text-light); }
-.hr-logo span:nth-child(8) { background: hsl(28, 72%, 48%); color: var(--text-light); }
 
 .hr-logo .hr-logo-blank {
   background: transparent;
@@ -98,6 +91,25 @@
 /* 开始页标题：五个汉字，字号小于 2048 */
 .start-title {
   font-size: 40px;
+}
+
+/* ---- 开始页尺寸选择：8 档尺寸用 4 列紧凑网格（覆盖公共 2 列布局） ---- */
+.start-size-grid {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.start-size-grid button {
+  padding: 12px 0 10px;
+}
+
+.size-num {
+  font-size: 19px;
+}
+
+.size-label {
+  font-size: 11px;
 }
 
 /* ========== 矮屏/横屏适配（华容道专属部分） ========== */
@@ -115,5 +127,24 @@
 
   .start-title {
     font-size: 30px;
+  }
+
+  /* 尺寸网格矮屏适配：4 列布局压缩间距（本文件晚于 common.css 加载，需自带覆盖） */
+  .start-size-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .start-size-grid button {
+    padding: 9px 0 8px;
+  }
+
+  .size-num {
+    font-size: 16px;
+  }
+
+  .size-label {
+    font-size: 10px;
   }
 }

@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#faf8ef">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23bbada0'/%3E%3Crect x='7' y='7' width='23' height='23' rx='4' fill='%23eee4da'/%3E%3Crect x='34' y='7' width='23' height='23' rx='4' fill='%23ede0c8'/%3E%3Crect x='7' y='34' width='23' height='23' rx='4' fill='%23f2b179'/%3E%3Crect x='34' y='34' width='23' height='23' rx='4' fill='%23f59563'/%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23bbada0'/%3E%3Crect x='7' y='7' width='23' height='23' rx='4' fill='%23eee4da'/%3E%3Crect x='34' y='7' width='23' height='23' rx='4' fill='%23ede0c8'/%3E%3Crect x='7' y='34' width='23' height='23' rx='4' fill='%23f2b179'/%3E%3Crect x='34' y='34' width='23' height='23' rx='4' fill='%23f59563'/%3E%3Ctext x='18.5' y='24.5' font-family='Arial,sans-serif' font-size='16' font-weight='700' text-anchor='middle' fill='%23776e65'%3E2%3C/text%3E%3Ctext x='45.5' y='24.5' font-family='Arial,sans-serif' font-size='16' font-weight='700' text-anchor='middle' fill='%23776e65'%3E0%3C/text%3E%3Ctext x='18.5' y='51.5' font-family='Arial,sans-serif' font-size='16' font-weight='700' text-anchor='middle' fill='%23f9f6f2'%3E4%3C/text%3E%3Ctext x='45.5' y='51.5' font-family='Arial,sans-serif' font-size='16' font-weight='700' text-anchor='middle' fill='%23f9f6f2'%3E8%3C/text%3E%3C/svg%3E">
   <title>2048 · 小游戏合集</title>
-  <link rel="stylesheet" href="css/common.css">
-  <link rel="stylesheet" href="css/game2048.css">
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/game2048.css">
 </head>
 <body>
   <div class="container">
@@ -107,19 +107,6 @@
         </div>
       </div>
 
-      <div class="setting-group" data-setting="size">
-        <div class="setting-label">
-          棋盘大小
-          <span class="setting-note">切换开新对局</span>
-        </div>
-        <div class="setting-options">
-          <button type="button" data-value="3">3×3</button>
-          <button type="button" data-value="4">4×4</button>
-          <button type="button" data-value="5">5×5</button>
-          <button type="button" data-value="6">6×6</button>
-        </div>
-      </div>
-
       <div class="setting-group" data-setting="animSpeed">
         <div class="setting-label">动画速度</div>
         <div class="setting-options">
@@ -138,9 +125,9 @@
     <div class="start-inner">
       <div class="start-logo" aria-hidden="true">
         <span class="start-logo-tile t2">2</span>
+        <span class="start-logo-tile t0">0</span>
         <span class="start-logo-tile t4">4</span>
         <span class="start-logo-tile t8">8</span>
-        <span class="start-logo-tile t16">16</span>
       </div>
       <h1 class="start-title">2048</h1>
       <p class="start-subtitle">选择棋盘大小</p>
@@ -151,13 +138,14 @@
         <button type="button" data-size="6"><span class="size-num">6×6</span><span class="size-label">挑战</span></button>
       </div>
       <button type="button" id="btn-start" class="btn btn-primary start-btn">开始游戏</button>
+      <button type="button" id="btn-start-home" class="btn btn-secondary start-back">返回菜单</button>
     </div>
   </div>
 
-  <script src="js/common/storage.js"></script>
-  <script src="js/common/swipe.js"></script>
-  <script src="js/common/modal.js"></script>
-  <script src="js/game.js"></script>
-  <script src="js/main.js"></script>
+  <script src="../js/common/storage.js"></script>
+  <script src="../js/common/swipe.js"></script>
+  <script src="../js/common/modal.js"></script>
+  <script src="../js/game.js"></script>
+  <script src="../js/main.js"></script>
 </body>
 </html>

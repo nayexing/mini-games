@@ -11,6 +11,8 @@
   --gold-dark: #d9a41b;
   --hint: #a89a8c;
   --tile-ms: 0.11s; /* 方块滑动过渡时长，由动画速度档位驱动 */
+  /* 华容道浅橡木纯色（游戏滑块 / 开始页 logo / 主页卡片共用，改色只动此处） */
+  --hr-wood: #DFC08C;
 }
 
 * {
@@ -436,6 +438,14 @@ body {
   font-size: 17px;
 }
 
+/* 开始页「返回菜单」：全宽次级按钮，较矮 */
+.start-back {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 0;
+  font-size: 14px;
+}
+
 /* ========== 矮屏/横屏适配：压缩间距，棋盘随高度缩小，避免内容被裁切 ========== */
 @media (max-height: 620px) {
   .container {
@@ -487,5 +497,10 @@ body {
   .start-btn {
     margin-top: 16px;
     padding: 11px 0;
+  }
+
+  .start-back {
+    margin-top: 10px;
+    padding: 9px 0;
   }
 }

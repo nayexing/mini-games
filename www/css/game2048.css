@@ -108,7 +108,7 @@
 .tile-2048 { background: var(--gold); color: var(--text-light); box-shadow: 0 0 20px rgba(237, 194, 46, 0.6); }
 .tile-super { background: #3c3a32; color: var(--text-light); }
 
-/* ========== 开始页 logo：四宫格 2/4/8/16 ========== */
+/* ========== 开始页 logo：四宫格 2/0/4/8 ========== */
 .start-logo {
   display: grid;
   grid-template-columns: repeat(2, 44px);
@@ -131,9 +131,9 @@
 }
 
 .start-logo-tile.t2 { background: #eee4da; }
-.start-logo-tile.t4 { background: #ede0c8; }
-.start-logo-tile.t8 { background: #f2b179; color: var(--text-light); }
-.start-logo-tile.t16 { background: #f59563; color: var(--text-light); font-size: 15px; }
+.start-logo-tile.t0 { background: #ede0c8; }
+.start-logo-tile.t4 { background: #f2b179; color: var(--text-light); }
+.start-logo-tile.t8 { background: #f59563; color: var(--text-light); }
 
 /* ========== 矮屏/横屏适配（2048 专属部分） ========== */
 @media (max-height: 620px) {
@@ -160,9 +160,5 @@
 
   .start-logo-tile {
     font-size: 14px;
-  }
-
-  .start-logo-tile.t16 {
-    font-size: 12px;
   }
 }
