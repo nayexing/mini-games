@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#faf8ef">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23bbada0'/%3E%3Crect x='7' y='7' width='15' height='15' rx='3' fill='%23eee4da'/%3E%3Crect x='24.5' y='7' width='15' height='15' rx='3' fill='%23ede0c8'/%3E%3Crect x='42' y='7' width='15' height='15' rx='3' fill='%23f2b179'/%3E%3Crect x='7' y='24.5' width='15' height='15' rx='3' fill='%23f59563'/%3E%3Crect x='24.5' y='24.5' width='15' height='15' rx='3' fill='%23f67c5f'/%3E%3Crect x='42' y='24.5' width='15' height='15' rx='3' fill='%23f65e3b'/%3E%3Crect x='7' y='42' width='15' height='15' rx='3' fill='%23edcf72'/%3E%3Crect x='24.5' y='42' width='15' height='15' rx='3' fill='%23edc850'/%3E%3C/svg%3E">
+  <title>数字华容道 · 小游戏合集</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/huarongdao.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">数字华容道</h1>
+      <div class="scores">
+        <div class="score-box" id="moves-box">
+          <span class="score-label">步数</span>
+          <span class="score-value" id="moves">0</span>
+        </div>
+        <div class="score-box">
+          <span class="score-label">用时</span>
+          <span class="score-value" id="time">00:00</span>
+        </div>
+        <div class="score-box">
+          <span class="score-label">最佳</span>
+          <span class="score-value" id="best">—</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="controls">
+      <button type="button" id="btn-home" class="btn btn-secondary">主页</button>
+      <button type="button" id="btn-new" class="btn btn-primary">新游戏</button>
+      <button type="button" id="btn-undo" class="btn btn-secondary">撤销</button>
+      <button type="button" id="btn-settings" class="btn btn-secondary">设置</button>
+    </div>
+
+    <div class="board-wrap">
+      <div class="board" id="board">
+        <div class="grid-cells" id="grid-cells"></div>
+        <div class="tiles" id="tiles"></div>
+      </div>
+    </div>
+
+    <p class="hint" id="hint">滑动或点击方块，将数字按顺序复原</p>
+  </div>
+
+  <!-- 胜利：全屏遮罩 + 居中卡片弹窗 -->
+  <div class="modal-backdrop" id="win-modal">
+    <div class="modal-card overlay-card">
+      <div class="overlay-title">复原成功！</div>
+      <div class="win-record" id="win-record">新纪录</div>
+      <div class="win-stats">
+        <div class="win-stat">
+          <span>本局步数</span>
+          <span class="win-stat-value" id="win-moves">0</span>
+        </div>
+        <div class="win-stat">
+          <span>用时</span>
+          <span class="win-stat-value" id="win-time">00:00</span>
+        </div>
+        <div class="win-stat">
+          <span>最佳成绩</span>
+          <span class="win-stat-value" id="win-best">0</span>
+        </div>
+      </div>
+      <div class="overlay-buttons">
+        <button type="button" id="btn-win-retry" class="btn btn-primary">再来一局</button>
+        <button type="button" id="btn-win-home" class="btn btn-secondary">返回菜单</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置：全屏遮罩 + 居中卡片弹窗 -->
+  <div class="modal-backdrop" id="settings-modal">
+    <div class="modal-card settings-card">
+      <h2 class="modal-title">设置</h2>
+
+      <div class="setting-group" data-setting="sensitivity">
+        <div class="setting-label">滑动灵敏度</div>
+        <div class="setting-options">
+          <button type="button" data-value="low">低</button>
+          <button type="button" data-value="standard">标准</button>
+          <button type="button" data-value="high">高</button>
+        </div>
+      </div>
+
+      <div class="setting-group" data-setting="animSpeed">
+        <div class="setting-label">动画速度</div>
+        <div class="setting-options">
+          <button type="button" data-value="fast">快</button>
+          <button type="button" data-value="standard">标准</button>
+          <button type="button" data-value="slow">慢</button>
+        </div>
+      </div>
+
+      <button type="button" id="btn-settings-close" class="btn btn-primary modal-close">完成</button>
+    </div>
+  </div>
+
+  <!-- 开始页：无存档时显示，选择棋盘大小后开局 -->
+  <div class="start-screen" id="start-screen">
+    <div class="start-inner">
+      <div class="hr-logo" aria-hidden="true">
+        <span>1</span><span>2</span><span>3</span>
+        <span>4</span><span>5</span><span>6</span>
+        <span>7</span><span>8</span><span class="hr-logo-blank"></span>
+      </div>
+      <h1 class="start-title">数字华容道</h1>
+      <p class="start-subtitle">选择棋盘大小</p>
+      <div class="start-size-grid" id="start-size-grid">
+        <button type="button" data-size="3"><span class="size-num">3×3</span><span class="size-label">紧凑</span></button>
+        <button type="button" data-size="4"><span class="size-num">4×4</span><span class="size-label">经典</span></button>
+        <button type="button" data-size="5"><span class="size-num">5×5</span><span class="size-label">挑战</span></button>
+      </div>
+      <button type="button" id="btn-start" class="btn btn-primary start-btn">开始游戏</button>
+    </div>
+  </div>
+
+  <script src="js/common/storage.js"></script>
+  <script src="js/common/swipe.js"></script>
+  <script src="js/common/modal.js"></script>
+  <script src="js/huarong.js"></script>
+  <script src="js/huarong-main.js"></script>
+</body>
+</html>

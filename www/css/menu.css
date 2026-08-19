@@ -1,0 +1,185 @@
+/* ========== 合集主页专属样式：hero 区 / 游戏卡片网格 / 页脚 ========== */
+.menu-container {
+  justify-content: center;
+}
+
+.menu-hero {
+  text-align: center;
+  margin-top: 6vh;
+}
+
+.menu-logo {
+  display: grid;
+  grid-template-columns: repeat(2, 52px);
+  grid-auto-rows: 52px;
+  gap: 7px;
+  padding: 9px;
+  background: var(--board-bg);
+  border-radius: 14px;
+  width: fit-content;
+  margin: 0 auto;
+  animation: logoPop 0.4s ease;
+}
+
+.menu-logo-tile {
+  border-radius: 8px;
+}
+
+.menu-logo-tile.c1 { background: #eee4da; }
+.menu-logo-tile.c2 { background: #f2b179; }
+.menu-logo-tile.c3 { background: #edcf72; }
+.menu-logo-tile.c4 { background: #f65e3b; }
+
+.menu-title {
+  margin: 24px 0 0;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.menu-sub {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--hint);
+}
+
+/* ---- 游戏卡片网格 ---- */
+.game-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 36px;
+}
+
+.game-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 12px 18px;
+  background: #fff;
+  border: 2px solid rgba(187, 173, 160, 0.45);
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text);
+  text-decoration: none;
+  transition: transform 0.08s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.game-card:active {
+  transform: scale(0.96);
+}
+
+@media (hover: hover) {
+  .game-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(119, 110, 101, 0.18);
+    border-color: var(--board-bg);
+  }
+}
+
+/* 卡片图形标识：2048 四宫格 */
+.card-logo-2048 {
+  display: grid;
+  grid-template-columns: repeat(2, 26px);
+  grid-auto-rows: 26px;
+  gap: 4px;
+  padding: 5px;
+  background: var(--board-bg);
+  border-radius: 8px;
+}
+
+.card-logo-2048 span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* 卡片图形标识：华容道 3×3 迷你盘 */
+.card-logo-hr {
+  display: grid;
+  grid-template-columns: repeat(3, 18px);
+  grid-auto-rows: 18px;
+  gap: 3px;
+  padding: 4px;
+  background: var(--board-bg);
+  border-radius: 8px;
+}
+
+.card-logo-hr span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.card-logo-hr span.hr-blank {
+  background: transparent;
+}
+
+.card-name {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.card-desc {
+  font-size: 12px;
+  color: var(--hint);
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ---- 页脚 ---- */
+.menu-footer {
+  margin-top: auto;
+  padding-top: 24px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--hint);
+}
+
+/* ---- 窄屏：单列卡片 ---- */
+@media (max-width: 380px) {
+  .game-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- 矮屏/横屏适配 ---- */
+@media (max-height: 620px) {
+  .menu-hero {
+    margin-top: 2vh;
+  }
+
+  .menu-logo {
+    grid-template-columns: repeat(2, 40px);
+    grid-auto-rows: 40px;
+    gap: 5px;
+    padding: 7px;
+  }
+
+  .menu-title {
+    font-size: 30px;
+    margin-top: 16px;
+  }
+
+  .game-grid {
+    margin-top: 22px;
+    gap: 10px;
+  }
+
+  .game-card {
+    padding: 14px 10px 12px;
+    gap: 8px;
+  }
+
+  .menu-footer {
+    padding-top: 14px;
+  }
+}

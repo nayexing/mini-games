@@ -1,0 +1,168 @@
+/* ========== 2048 专属样式：道具栏 / 瞄准态 / 合并动画 / 数值配色 / 开始页 logo ========== */
+
+/* ---- 道具栏 ---- */
+.tools {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.tool-btn {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 0 7px;
+  border: 2px solid var(--board-bg);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.tool-btn:active {
+  transform: scale(0.94);
+}
+
+.tool-btn svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.tool-name {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.tool-btn .badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.tool-btn.used {
+  opacity: 0.45;
+}
+
+.tool-btn.used .badge {
+  background: var(--cell-bg);
+  color: var(--text-light);
+}
+
+.tool-btn.aiming {
+  border-color: var(--gold);
+  background: rgba(237, 194, 46, 0.16);
+}
+
+/* ---- 瞄准态：金色呼吸边框提示「点选一个方块」 ---- */
+.board.aiming {
+  animation: aimPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes aimPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(237, 194, 46, 0.95); }
+  50% { box-shadow: 0 0 0 6px rgba(237, 194, 46, 0.35); }
+}
+
+/* ---- 合并动画 ---- */
+.tile-merged {
+  z-index: 2;
+}
+
+.tile-merged .tile-inner {
+  animation: pop 0.18s ease;
+}
+
+.tile-consumed {
+  z-index: 0;
+}
+
+/* ========== 经典数值配色 ========== */
+.tile-2    { background: #eee4da; }
+.tile-4    { background: #ede0c8; }
+.tile-8    { background: #f2b179; color: var(--text-light); }
+.tile-16   { background: #f59563; color: var(--text-light); }
+.tile-32   { background: #f67c5f; color: var(--text-light); }
+.tile-64   { background: #f65e3b; color: var(--text-light); }
+.tile-128  { background: #edcf72; color: var(--text-light); box-shadow: 0 0 12px rgba(243, 215, 116, 0.35); }
+.tile-256  { background: #edcc61; color: var(--text-light); box-shadow: 0 0 14px rgba(243, 215, 116, 0.45); }
+.tile-512  { background: #edc850; color: var(--text-light); box-shadow: 0 0 16px rgba(243, 215, 116, 0.5); }
+.tile-1024 { background: #edc53f; color: var(--text-light); box-shadow: 0 0 18px rgba(243, 215, 116, 0.55); }
+.tile-2048 { background: var(--gold); color: var(--text-light); box-shadow: 0 0 20px rgba(237, 194, 46, 0.6); }
+.tile-super { background: #3c3a32; color: var(--text-light); }
+
+/* ========== 开始页 logo：四宫格 2/4/8/16 ========== */
+.start-logo {
+  display: grid;
+  grid-template-columns: repeat(2, 44px);
+  grid-auto-rows: 44px;
+  gap: 6px;
+  padding: 8px;
+  background: var(--board-bg);
+  border-radius: 12px;
+  animation: logoPop 0.4s ease;
+}
+
+.start-logo-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.start-logo-tile.t2 { background: #eee4da; }
+.start-logo-tile.t4 { background: #ede0c8; }
+.start-logo-tile.t8 { background: #f2b179; color: var(--text-light); }
+.start-logo-tile.t16 { background: #f59563; color: var(--text-light); font-size: 15px; }
+
+/* ========== 矮屏/横屏适配（2048 专属部分） ========== */
+@media (max-height: 620px) {
+  .tools {
+    margin-top: 10px;
+  }
+
+  .tool-btn {
+    padding: 6px 0 5px;
+  }
+
+  .tool-btn svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  /* 开始页矮屏适配：压缩 logo 尺寸 */
+  .start-logo {
+    grid-template-columns: repeat(2, 34px);
+    grid-auto-rows: 34px;
+    gap: 5px;
+    padding: 6px;
+  }
+
+  .start-logo-tile {
+    font-size: 14px;
+  }
+
+  .start-logo-tile.t16 {
+    font-size: 12px;
+  }
+}

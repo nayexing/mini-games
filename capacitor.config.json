@@ -1,6 +1,6 @@
 {
-  "appId": "com.example.game2048",
-  "appName": "2048",
+  "appId": "com.example.minigames",
+  "appName": "小游戏合集",
   "webDir": "www",
   "backgroundColor": "#faf8ef",
   "android": {

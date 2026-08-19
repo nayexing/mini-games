@@ -1,0 +1,119 @@
+/* ========== 数字华容道专属样式：滑块质感 / 标题 / 胜利弹窗 / 开始页 logo / 庆祝动效 ========== */
+
+/* ---- 标题：五个汉字，字号小于 2048 ---- */
+.title {
+  font-size: 28px;
+}
+
+/* ---- 滑块：轻阴影增加质感（配色由 JS 按 value 计算暖色渐变，越大越深） ---- */
+.hr-tile {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.14);
+}
+
+/* ---- 胜利庆祝：棋盘金色光晕 + 全部滑块弹跳 ---- */
+.board.celebrate {
+  animation: boardGlow 0.9s ease;
+}
+
+@keyframes boardGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(237, 194, 46, 0); }
+  50% { box-shadow: 0 0 24px 6px rgba(237, 194, 46, 0.65); }
+}
+
+.tiles.celebrate .tile-inner {
+  animation: pop 0.4s ease;
+}
+
+/* ---- 胜利弹窗内容 ---- */
+.win-record {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 3px 16px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.win-stats {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.win-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--btn-light);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.win-stat-value {
+  font-weight: 700;
+}
+
+/* ========== 开始页 logo：3×3 迷你华容道（1-8 + 空格，暖色渐变） ========== */
+.hr-logo {
+  display: grid;
+  grid-template-columns: repeat(3, 38px);
+  grid-auto-rows: 38px;
+  gap: 5px;
+  padding: 7px;
+  background: var(--board-bg);
+  border-radius: 12px;
+  animation: logoPop 0.4s ease;
+}
+
+.hr-logo span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.hr-logo span:nth-child(1) { background: hsl(36, 30%, 83%); }
+.hr-logo span:nth-child(2) { background: hsl(35, 36%, 78%); }
+.hr-logo span:nth-child(3) { background: hsl(34, 42%, 73%); }
+.hr-logo span:nth-child(4) { background: hsl(33, 48%, 68%); color: var(--text-light); }
+.hr-logo span:nth-child(5) { background: hsl(31, 54%, 63%); color: var(--text-light); }
+.hr-logo span:nth-child(6) { background: hsl(30, 60%, 58%); color: var(--text-light); }
+.hr-logo span:nth-child(7) { background: hsl(29, 66%, 53%); color: var(--text-light); }
+.hr-logo span:nth-child(8) { background: hsl(28, 72%, 48%); color: var(--text-light); }
+
+.hr-logo .hr-logo-blank {
+  background: transparent;
+  box-shadow: none;
+}
+
+/* 开始页标题：五个汉字，字号小于 2048 */
+.start-title {
+  font-size: 40px;
+}
+
+/* ========== 矮屏/横屏适配（华容道专属部分） ========== */
+@media (max-height: 620px) {
+  .hr-logo {
+    grid-template-columns: repeat(3, 30px);
+    grid-auto-rows: 30px;
+    gap: 4px;
+    padding: 6px;
+  }
+
+  .hr-logo span {
+    font-size: 13px;
+  }
+
+  .start-title {
+    font-size: 30px;
+  }
+}

@@ -1,4 +1,4 @@
-/* ========== 经典原版 2048 配色与全局样式 ========== */
+/* ========== 小游戏合集公共样式：变量 / 骨架 / 按钮 / 弹窗 / 开始页 ========== */
 :root {
   --bg: #faf8ef;
   --text: #776e65;
@@ -96,7 +96,7 @@ body {
   100% { transform: scale(1); }
 }
 
-/* ========== 控制按钮与尺寸切换 ========== */
+/* ========== 控制按钮 ========== */
 .controls {
   display: flex;
   gap: 12px;
@@ -134,78 +134,7 @@ body {
   color: var(--text);
 }
 
-/* ========== 道具栏 ========== */
-.tools {
-  display: flex;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.tool-btn {
-  position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 9px 0 7px;
-  border: 2px solid var(--board-bg);
-  border-radius: 10px;
-  background: transparent;
-  color: var(--text);
-  font-family: inherit;
-  cursor: pointer;
-  transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
-}
-
-.tool-btn:active {
-  transform: scale(0.94);
-}
-
-.tool-btn svg {
-  width: 20px;
-  height: 20px;
-  display: block;
-}
-
-.tool-name {
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1;
-}
-
-.tool-btn .badge {
-  position: absolute;
-  top: -7px;
-  right: -7px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 999px;
-  background: var(--gold);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 18px;
-  text-align: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.tool-btn.used {
-  opacity: 0.45;
-}
-
-.tool-btn.used .badge {
-  background: var(--cell-bg);
-  color: var(--text-light);
-}
-
-.tool-btn.aiming {
-  border-color: var(--gold);
-  background: rgba(237, 194, 46, 0.16);
-}
-
-/* ========== 棋盘 ========== */
+/* ========== 棋盘基础（各游戏共用骨架） ========== */
 .board-wrap {
   margin-top: 18px;
   flex: 1;
@@ -224,16 +153,6 @@ body {
   background: var(--board-bg);
   border-radius: 10px;
   touch-action: none;
-}
-
-/* 瞄准态：金色呼吸边框提示「点选一个方块」 */
-.board.aiming {
-  animation: aimPulse 1.2s ease-in-out infinite;
-}
-
-@keyframes aimPulse {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(237, 194, 46, 0.95); }
-  50% { box-shadow: 0 0 0 6px rgba(237, 194, 46, 0.35); }
 }
 
 .grid-cells {
@@ -278,18 +197,6 @@ body {
   animation: appear 0.16s ease;
 }
 
-.tile-merged {
-  z-index: 2;
-}
-
-.tile-merged .tile-inner {
-  animation: pop 0.18s ease;
-}
-
-.tile-consumed {
-  z-index: 0;
-}
-
 @keyframes appear {
   0% { transform: scale(0); }
   100% { transform: scale(1); }
@@ -300,20 +207,6 @@ body {
   45% { transform: scale(1.18); }
   100% { transform: scale(1); }
 }
-
-/* ========== 经典数值配色 ========== */
-.tile-2    { background: #eee4da; }
-.tile-4    { background: #ede0c8; }
-.tile-8    { background: #f2b179; color: var(--text-light); }
-.tile-16   { background: #f59563; color: var(--text-light); }
-.tile-32   { background: #f67c5f; color: var(--text-light); }
-.tile-64   { background: #f65e3b; color: var(--text-light); }
-.tile-128  { background: #edcf72; color: var(--text-light); box-shadow: 0 0 12px rgba(243, 215, 116, 0.35); }
-.tile-256  { background: #edcc61; color: var(--text-light); box-shadow: 0 0 14px rgba(243, 215, 116, 0.45); }
-.tile-512  { background: #edc850; color: var(--text-light); box-shadow: 0 0 16px rgba(243, 215, 116, 0.5); }
-.tile-1024 { background: #edc53f; color: var(--text-light); box-shadow: 0 0 18px rgba(243, 215, 116, 0.55); }
-.tile-2048 { background: var(--gold); color: var(--text-light); box-shadow: 0 0 20px rgba(237, 194, 46, 0.6); }
-.tile-super { background: #3c3a32; color: var(--text-light); }
 
 /* ========== 全屏弹窗（胜负与设置共用背板/卡片） ========== */
 .modal-backdrop {
@@ -472,37 +365,11 @@ body {
   align-items: center;
 }
 
-.start-logo {
-  display: grid;
-  grid-template-columns: repeat(2, 44px);
-  grid-auto-rows: 44px;
-  gap: 6px;
-  padding: 8px;
-  background: var(--board-bg);
-  border-radius: 12px;
-  animation: logoPop 0.4s ease;
-}
-
 @keyframes logoPop {
   0% { transform: scale(0.6); opacity: 0; }
   60% { transform: scale(1.06); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
-
-.start-logo-tile {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.start-logo-tile.t2 { background: #eee4da; }
-.start-logo-tile.t4 { background: #ede0c8; }
-.start-logo-tile.t8 { background: #f2b179; color: var(--text-light); }
-.start-logo-tile.t16 { background: #f59563; color: var(--text-light); font-size: 15px; }
 
 .start-title {
   margin: 18px 0 0;
@@ -584,19 +451,6 @@ body {
     margin-top: 10px;
   }
 
-  .tools {
-    margin-top: 10px;
-  }
-
-  .tool-btn {
-    padding: 6px 0 5px;
-  }
-
-  .tool-btn svg {
-    width: 17px;
-    height: 17px;
-  }
-
   .board-wrap {
     margin-top: 10px;
     padding-bottom: 1vh;
@@ -611,22 +465,7 @@ body {
     margin-top: 8px;
   }
 
-  /* 开始页矮屏适配：压缩间距与 logo 尺寸 */
-  .start-logo {
-    grid-template-columns: repeat(2, 34px);
-    grid-auto-rows: 34px;
-    gap: 5px;
-    padding: 6px;
-  }
-
-  .start-logo-tile {
-    font-size: 14px;
-  }
-
-  .start-logo-tile.t16 {
-    font-size: 12px;
-  }
-
+  /* 开始页矮屏适配：压缩间距 */
   .start-title {
     margin-top: 12px;
     font-size: 44px;

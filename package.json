@@ -1,8 +1,8 @@
 {
-  "name": "game-2048",
+  "name": "mini-games",
   "private": true,
-  "version": "1.0.0",
-  "description": "Classic 2048 game packaged as Android APK via Capacitor",
+  "version": "1.1.0",
+  "description": "Mini games collection (2048 + Huarong Dao) packaged as Android APK via Capacitor",
   "scripts": {
     "sync": "cap sync",
     "build:apk": "cd android && ./gradlew assembleDebug"

@@ -4,10 +4,8 @@
 (function () {
   'use strict';
 
-  var LS_PREFIX = 'game2048_';
   var SETTINGS_KEY = 'settings';
   var SAVE_KEY = 'save';
-  var SWIPE_RATIO = 1.2;      // 长轴/短轴比，防对角误判
   var VALID_SIZES = [3, 4, 5, 6];
 
   /* 设置档位表 */
@@ -48,27 +46,8 @@
     refresh: document.getElementById('tool-refresh')
   };
 
-  /* ---------- 本地存储（异常降级为内存态，不阻断游戏） ---------- */
-  var storage = {
-    get: function (key, fallback) {
-      try {
-        var raw = localStorage.getItem(LS_PREFIX + key);
-        return raw === null ? fallback : JSON.parse(raw);
-      } catch (e) {
-        return fallback;
-      }
-    },
-    set: function (key, value) {
-      try {
-        localStorage.setItem(LS_PREFIX + key, JSON.stringify(value));
-      } catch (e) { /* 隐私模式等场景下静默降级 */ }
-    },
-    remove: function (key) {
-      try {
-        localStorage.removeItem(LS_PREFIX + key);
-      } catch (e) { /* 静默降级 */ }
-    }
-  };
+  /* ---------- 本地存储（公共模块，前缀沿用 game2048_ 保证老用户存档/最高分无损） ---------- */
+  var storage = MGStorage.create('game2048_');
 
   /* ---------- 设置：加载 / 校验 / 应用 / 持久化 ---------- */
   function loadSettings() {
@@ -84,7 +63,6 @@
   }
 
   var settings = loadSettings();
-  var SWIPE_THRESHOLD = SENSITIVITY[settings.sensitivity]; // 灵敏度档位：立即生效
   var ANIM_MS = ANIMS[settings.animSpeed].ms;              // 动画速度档位：立即生效
 
   function applyAnimSpeed() {
@@ -317,13 +295,16 @@
 
   /* ---------- 全屏弹窗：胜负 ---------- */
   function showOverlay(type) {
-    overlayEl.className = 'modal-backdrop show ' + type;
+    overlayEl.classList.remove('win', 'lose');
+    overlayEl.classList.add(type);
+    MGModal.open(overlayEl);
     overlayMsgEl.textContent = type === 'win' ? '你赢了！' : '游戏结束';
     btnContinue.style.display = type === 'win' ? '' : 'none';
   }
 
   function hideOverlay() {
-    overlayEl.className = 'modal-backdrop';
+    MGModal.close(overlayEl);
+    overlayEl.classList.remove('win', 'lose');
   }
 
   /* ---------- 全屏弹窗：设置 ---------- */
@@ -331,9 +312,10 @@
     var groups = settingsModal.querySelectorAll('.setting-group');
     for (var i = 0; i < groups.length; i++) {
       var name = groups[i].dataset.setting;
+      var current = name === 'size' ? size : settings[name]; // 棋盘大小实时反映当前对局
       var btns = groups[i].querySelectorAll('button[data-value]');
       for (var j = 0; j < btns.length; j++) {
-        btns[j].classList.toggle('active', btns[j].dataset.value === String(settings[name]));
+        btns[j].classList.toggle('active', btns[j].dataset.value === String(current));
       }
     }
     // 所选难度与当前局生效难度不一致时，提示「新游戏后生效」
@@ -342,11 +324,11 @@
 
   function openSettings() {
     syncSettingsUI();
-    settingsModal.classList.add('show');
+    MGModal.open(settingsModal);
   }
 
   function closeSettings() {
-    settingsModal.classList.remove('show');
+    MGModal.close(settingsModal);
   }
 
   /** 胜利目标变更：立即重判当前局，避免「永远赢不了」或「赢过不再提示」 */
@@ -367,10 +349,19 @@
 
   function setSetting(name, value) {
     if (name === 'target') value = Number(value);
+    // 棋盘大小：不进设置存储（由存档/last_size 决定），切换即开新对局
+    if (name === 'size') {
+      value = Number(value);
+      if (value !== size && VALID_SIZES.indexOf(value) !== -1) {
+        closeSettings();
+        switchSize(value);
+      }
+      return;
+    }
     if (settings[name] === value) return;
     settings[name] = value;
     storage.set(SETTINGS_KEY, settings);
-    if (name === 'sensitivity') SWIPE_THRESHOLD = SENSITIVITY[value];
+    if (name === 'sensitivity') swipe.setThreshold(SENSITIVITY[value]);
     else if (name === 'animSpeed') applyAnimSpeed();
     else if (name === 'target') applyTarget();
     // difficulty：仅记录所选值，新一局生效（newGame/switchSize 应用）
@@ -557,106 +548,29 @@
     else switchSize(n);
   }
 
-  /** 主页：放弃当前局（清除存档）返回开始页 */
+  /** 主页：返回合集菜单（保留对局进度，回来可继续） */
   function goHome() {
-    storage.remove(SAVE_KEY);
-    hideOverlay();
-    closeSettings();
-    cancelAim();
-    showStartScreen();
+    saveGame();
+    window.location.href = 'index.html';
   }
 
-  /* ---------- 手势：整屏滑动 + 鼠标拖拽（触摸与鼠标共享判定逻辑） ---------- */
-  var tracking = false;   // 本次手势是否在跟踪中
-  var handled = false;    // 本次手势是否已触发过移动（move 阶段触发后置位）
-  var startX = 0;
-  var startY = 0;
+  /* ---------- 手势：公共滑动识别器（触摸与鼠标统一处理） ---------- */
 
   /** 起点落在按钮上、胜负弹窗或设置弹窗打开时不劫持手势 */
   function gestureBlocked(target) {
     if (startScreenVisible) return true;
-    if (overlayEl.classList.contains('show')) return true;
-    if (settingsModal.classList.contains('show')) return true;
+    if (MGModal.isOpen(overlayEl) || MGModal.isOpen(settingsModal)) return true;
     return !!(target && target.closest && target.closest('button'));
   }
 
-  function gestureStart(x, y) {
-    tracking = true;
-    handled = false;
-    startX = x;
-    startY = y;
-  }
-
-  /** 位移超阈值且方向明确立即触发移动，不等抬手；瞄准态下不触发移动 */
-  function gestureMove(x, y) {
-    if (!tracking || handled) return;
-    if (aiming) return;
-    var dx = x - startX;
-    var dy = y - startY;
-    var absX = Math.abs(dx);
-    var absY = Math.abs(dy);
-    var longAxis = Math.max(absX, absY);
-    if (longAxis < SWIPE_THRESHOLD) return;
-    if (longAxis < Math.min(absX, absY) * SWIPE_RATIO) return; // 对角方向不明确，等位移加大再判
-    handled = true;
-    doMove(absX > absY ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
-  }
-
-  /** 兜底：move 阶段未触发（未达阈值或方向不明）时，结束时终判；瞄准态下位移小于阈值视为点按 */
-  function gestureEnd(x, y) {
-    if (!tracking) return;
-    tracking = false;
-    if (handled) return;
-    var dx = x - startX;
-    var dy = y - startY;
-    var absX = Math.abs(dx);
-    var absY = Math.abs(dy);
-    var longAxis = Math.max(absX, absY);
-    if (aiming) {
-      if (longAxis < SWIPE_THRESHOLD) handleAimTap(x, y);
-      return; // 瞄准态下的滑动不触发移动，避免误操作
+  var swipe = MGSwipe.create({
+    threshold: SENSITIVITY[settings.sensitivity],
+    isBlocked: gestureBlocked,
+    canSwipe: function () { return !aiming; }, // 瞄准态下禁滑，避免误操作
+    onSwipe: doMove,
+    onTap: function (x, y) {
+      if (aiming) handleAimTap(x, y); // 瞄准态点按：点选方块执行道具，点空白取消
     }
-    if (longAxis < SWIPE_THRESHOLD) return;
-    if (longAxis < Math.min(absX, absY) * SWIPE_RATIO) return;
-    doMove(absX > absY ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
-  }
-
-  document.addEventListener('touchstart', function (e) {
-    if (e.touches.length > 1 || gestureBlocked(e.target)) { tracking = false; return; }
-    var t = e.touches[0];
-    gestureStart(t.clientX, t.clientY);
-  }, { passive: true });
-
-  document.addEventListener('touchmove', function (e) {
-    if (!tracking) return;
-    e.preventDefault(); // 跟踪中的手势阻止页面滚动/下拉刷新
-    var t = e.touches[0];
-    gestureMove(t.clientX, t.clientY);
-  }, { passive: false });
-
-  document.addEventListener('touchend', function (e) {
-    if (!tracking) return;
-    var t = e.changedTouches[0];
-    gestureEnd(t.clientX, t.clientY);
-  }, { passive: true });
-
-  document.addEventListener('touchcancel', function () {
-    tracking = false;
-  }, { passive: true });
-
-  document.addEventListener('mousedown', function (e) {
-    if (e.button !== 0 || gestureBlocked(e.target)) return;
-    gestureStart(e.clientX, e.clientY);
-  });
-
-  document.addEventListener('mousemove', function (e) {
-    if (!tracking) return;
-    gestureMove(e.clientX, e.clientY);
-  });
-
-  document.addEventListener('mouseup', function (e) {
-    if (!tracking) return;
-    gestureEnd(e.clientX, e.clientY);
   });
 
   /* ---------- 键盘（浏览器调试用） ---------- */
