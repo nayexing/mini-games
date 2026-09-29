@@ -27,6 +27,24 @@
     });
   }
 
+  function validSnapshot(snapshot, size) {
+    if (!snapshot || !Array.isArray(snapshot.grid) || snapshot.grid.length !== size) return false;
+    if (typeof snapshot.score !== 'number' || !Number.isFinite(snapshot.score) || snapshot.score < 0) return false;
+    var ids = new Set();
+    for (var r = 0; r < size; r++) {
+      var row = snapshot.grid[r];
+      if (!Array.isArray(row) || row.length !== size) return false;
+      for (var c = 0; c < size; c++) {
+        var tile = row[c];
+        if (tile === null) continue;
+        if (!tile || typeof tile !== 'object' || !Number.isInteger(tile.id) || tile.id < 1 || ids.has(tile.id)) return false;
+        if (!Number.isSafeInteger(tile.value) || tile.value < 2 || !Number.isInteger(Math.log2(tile.value))) return false;
+        ids.add(tile.id);
+      }
+    }
+    return true;
+  }
+
   /** 记录撤销快照（道具操作前调用；move 内部保持原有内联实现） */
   Game2048.prototype.saveSnapshot = function () {
     this.snapshot = { grid: cloneGrid(this.grid), score: this.score };
@@ -236,11 +254,9 @@
       }
     }
     this.nextId = Number.isInteger(state.nextId) && state.nextId > maxId ? state.nextId : maxId + 1;
-    if (state.snapshot && Array.isArray(state.snapshot.grid) && state.snapshot.grid.length === this.size) {
-      this.snapshot = { grid: cloneGrid(state.snapshot.grid), score: state.snapshot.score || 0 };
-    } else {
-      this.snapshot = null;
-    }
+    this.snapshot = validSnapshot(state.snapshot, this.size)
+      ? { grid: cloneGrid(state.snapshot.grid), score: state.snapshot.score }
+      : null;
     return true;
   };
 

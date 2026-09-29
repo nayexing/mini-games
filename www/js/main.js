@@ -451,6 +451,7 @@
 
   /* ---------- 游戏操作 ---------- */
   function doMove(dir) {
+    if (startScreenVisible || MGModal.isOpen(overlayEl) || MGModal.isOpen(settingsModal)) return;
     if (lock) {
       queuedDir = dir; // 锁期间不丢弃，只保留最后一个方向
       return;
@@ -473,10 +474,10 @@
       } else if (result.over) {
         showOverlay('lose');
       }
-      if (queuedDir) {
-        var next = queuedDir;
-        queuedDir = null;
-        doMove(next); // 补执行锁期间暂存的手势，形成连划流水线
+      var next = queuedDir;
+      queuedDir = null;
+      if (next && !result.over && !MGModal.isOpen(overlayEl) && !startScreenVisible && !MGModal.isOpen(settingsModal)) {
+        doMove(next); // 仅在对局仍可操作时补执行暂存手势
       }
     }, ANIM_MS);
   }
@@ -661,6 +662,7 @@
   renderAll(!restored); // 恢复存档不播出现动画，新局播放
   refreshScore(0);
   if (!restored) showStartScreen(); // 启动路由：有合法存档直接恢复对局，无存档进开始页选尺寸
+  else if (game.isOver()) showOverlay('lose');
 
   // 调试/自动化测试钩子
   window.__debug2048 = {

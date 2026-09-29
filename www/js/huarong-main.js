@@ -313,6 +313,8 @@
   }
 
   function showStartScreen() {
+    if (!startScreenVisible && (game.moves > 0 || timerId !== null)) saveGame();
+    stopTimer();
     startScreenVisible = true;
     pendingSize = size;
     syncStartSizeUI();
