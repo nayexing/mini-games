@@ -7,7 +7,8 @@
   var storage = MGStorage.create('huarong_');
   var SETTINGS_KEY = 'settings';
   var SAVE_KEY = 'save';
-  var VALID_SIZES = [3, 4, 5, 6, 7, 8, 9, 10];
+  var VALID_SIZES = [3, 4, 5, 6, 7, 8, 9, 10]; // 保留旧 9×9、10×10 对局的恢复能力
+  var NEW_SIZES = [3, 4, 5, 6, 7, 8];
 
   /* 设置档位表 */
   var SENSITIVITY = { low: 32, standard: 20, high: 12 }; // 滑动判定阈值(px)
@@ -75,6 +76,7 @@
   var save = loadSave();
   var size = save ? save.size : storage.get('last_size', 4);
   if (VALID_SIZES.indexOf(size) === -1) size = 4;
+  else if (!save && NEW_SIZES.indexOf(size) === -1) size = 8;
   var game = new HuarongDao(size);
   var best = storage.get('best_' + size, 0); // 当前尺寸最少步数纪录，0 表示无纪录
   var elapsed = 0;         // 本局用时（秒）
@@ -102,11 +104,8 @@
   }
 
   function fontSizeFor(value) {
-    return value < 10 ? Math.round(metrics.cell * 0.44) : Math.round(metrics.cell * 0.38);
+    return Math.max(12, Math.round(metrics.cell * (value < 10 ? 0.48 : 0.43)));
   }
-
-  /* 统一橡木配色：底色由 CSS .hr-tile（--hr-wood）提供，此处仅保留深棕文字色 */
-  var OAK_FG = '#6B4F2E';
 
   function place(el, row, col) {
     el.dataset.row = row;
@@ -140,7 +139,6 @@
     var inner = document.createElement('div');
     inner.className = 'tile-inner hr-tile';
     inner.textContent = t.value;
-    inner.style.color = OAK_FG;
     inner.style.fontSize = fontSizeFor(t.value) + 'px';
     el.appendChild(inner);
     sizeAndPlace(el, t.row, t.col);
@@ -316,7 +314,7 @@
     if (!startScreenVisible && (game.moves > 0 || timerId !== null)) saveGame();
     stopTimer();
     startScreenVisible = true;
-    pendingSize = size;
+    pendingSize = NEW_SIZES.indexOf(size) !== -1 ? size : 8;
     syncStartSizeUI();
     startScreenEl.classList.add('show');
   }
@@ -328,6 +326,7 @@
 
   /** 开始页开局：同尺寸重置当前局，异尺寸走 switchSize 完整换尺寸流程 */
   function startGameWithSize(n) {
+    if (NEW_SIZES.indexOf(n) === -1) return;
     hideStartScreen();
     if (n === size) newGame();
     else switchSize(n);

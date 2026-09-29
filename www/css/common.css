@@ -98,17 +98,36 @@ body {
   100% { transform: scale(1); }
 }
 
-/* ========== 控制按钮 ========== */
+/* ========== 两款游戏共用操作栏 ========== */
 .controls {
-  display: flex;
-  gap: 12px;
-  margin-top: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .controls .btn {
-  flex: 1;
-  padding-left: 0;
-  padding-right: 0;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 2px;
+  border-radius: 11px;
+  font-size: 14px;
+}
+
+.controls #btn-new {
+  background: #785d46;
+  box-shadow: 0 3px 8px rgba(88, 58, 34, 0.2);
+}
+
+.controls .btn-secondary {
+  border: 1px solid #e1d5c6;
+  background: #f1e8db;
+  color: #594330;
+}
+
+.controls .btn:focus-visible {
+  outline: 3px solid #be8744;
+  outline-offset: 2px;
 }
 
 .btn {
@@ -458,7 +477,7 @@ body {
   }
 
   .controls {
-    margin-top: 10px;
+    margin-top: 8px;
   }
 
   .board-wrap {

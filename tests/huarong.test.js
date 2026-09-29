@@ -52,3 +52,13 @@ test('非法主棋盘拒绝恢复且不修改原状态，损坏快照只丢弃�
   assert.equal(game.undo(), false);
   assert.equal(game.moves, 2);
 });
+
+test('旧版 9×9 和 10×10 存档仍可恢复', () => {
+  for (const size of [9, 10]) {
+    const game = new HuarongDao(size);
+    const board = Array.from({ length: size * size }, (_, i) => (i + 1) % (size * size));
+    assert.equal(game.restore({ board, moves: 12 }), true);
+    assert.deepEqual(game.board, board);
+    assert.equal(game.moves, 12);
+  }
+});
