@@ -12,10 +12,10 @@
 
   /* 设置档位表 */
   var SENSITIVITY = { low: 32, standard: 20, high: 12 }; // 滑动判定阈值(px)
-  var ANIMS = {                                          // css 过渡时长
-    fast: { css: '0.08s' },
-    standard: { css: '0.11s' },
-    slow: { css: '0.16s' }
+  var ANIMS = {                                          // css 过渡时长 + 全局动效倍率
+    fast: { css: '0.08s', scale: 0.75 },
+    standard: { css: '0.11s', scale: 1 },
+    slow: { css: '0.16s', scale: 1.45 }
   };
 
   var boardEl = document.getElementById('board');
@@ -44,21 +44,17 @@
   var settingsModal = document.getElementById('settings-modal');
   var btnSettingsClose = document.getElementById('btn-settings-close');
 
-  /* ---------- 设置：加载 / 校验 / 应用 / 持久化 ---------- */
-  function loadSettings() {
-    var def = { sensitivity: 'standard', animSpeed: 'standard' };
-    var s = storage.get(SETTINGS_KEY, null);
-    if (!s || typeof s !== 'object') return def;
-    return {
-      sensitivity: SENSITIVITY[s.sensitivity] !== undefined ? s.sensitivity : def.sensitivity,
-      animSpeed: ANIMS[s.animSpeed] !== undefined ? s.animSpeed : def.animSpeed
-    };
-  }
-
-  var settings = loadSettings();
+  /* ---------- 设置：按选项表加载 / 校验（弹窗与持久化由 MGShell 负责） ---------- */
+  var SETTINGS_SCHEMA = {
+    sensitivity: { options: Object.keys(SENSITIVITY), def: 'standard' },
+    animSpeed: { options: Object.keys(ANIMS), def: 'standard' }
+  };
+  var settings = MGShell.loadSettings(storage, SETTINGS_KEY, SETTINGS_SCHEMA);
 
   function applyAnimSpeed() {
-    document.documentElement.style.setProperty('--tile-ms', ANIMS[settings.animSpeed].css);
+    var a = ANIMS[settings.animSpeed];
+    document.documentElement.style.setProperty('--tile-ms', a.css);
+    MGMotion.setScale(a.scale);
   }
 
   /* ---------- 存档：校验 / 恢复（棋盘结构校验交给引擎严格校验） ---------- */
@@ -79,14 +75,12 @@
   else if (!save && NEW_SIZES.indexOf(size) === -1) size = 8;
   var game = new HuarongDao(size);
   var best = storage.get('best_' + size, 0); // 当前尺寸最少步数纪录，0 表示无纪录
-  var elapsed = 0;         // 本局用时（秒）
   var restored = false;
   var finished = false;    // 本局已完成（胜利弹窗后）
-  var startScreenVisible = false;
-  var pendingSize = size;  // 开始页当前选中的棋盘尺寸
   var tileEls = new Map(); // value -> 外层定位元素（每个数值仅一块）
   var metrics = null;      // { boardW, gap, cell }
-  var timerId = null;
+  // 本局用时（秒）：公共计时器每秒刷新显示
+  var timer = MGShell.createTimer(function (sec) { timeEl.textContent = MGShell.formatTime(sec); });
 
   /* ---------- 布局度量 ---------- */
   function computeMetrics() {
@@ -172,46 +166,29 @@
   }
 
   /* ---------- 统计与计时 ---------- */
-  function formatTime(sec) {
-    var m = Math.floor(sec / 60);
-    var s = sec % 60;
-    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
-  }
-
   function refreshStats(bumpMoves) {
     movesEl.textContent = game.moves;
-    if (bumpMoves) {
-      movesBoxEl.classList.remove('bump');
-      void movesBoxEl.offsetWidth; // 重启动画
-      movesBoxEl.classList.add('bump');
-    }
-    timeEl.textContent = formatTime(elapsed);
+    if (bumpMoves) MGShell.restartClass(movesBoxEl, 'bump');
+    timeEl.textContent = MGShell.formatTime(timer.elapsed());
     bestEl.textContent = best > 0 ? best : '—';
   }
 
   function startTimer() {
-    if (timerId !== null || finished) return;
-    timerId = setInterval(function () {
-      elapsed++;
-      timeEl.textContent = formatTime(elapsed);
-    }, 1000);
-  }
-
-  function stopTimer() {
-    if (timerId !== null) {
-      clearInterval(timerId);
-      timerId = null;
-    }
+    if (!finished) timer.start();
   }
 
   /* ---------- 存档 ---------- */
+  function isStartVisible() {
+    return startScreen.isVisible();
+  }
+
   function saveGame() {
-    if (startScreenVisible || finished) return; // 开始页可见/对局已结束时不写存档
+    if (isStartVisible() || finished) return; // 开始页可见/对局已结束时不写存档
     storage.set(SAVE_KEY, {
       size: size,
       board: game.board,
       moves: game.moves,
-      elapsed: elapsed,
+      elapsed: timer.elapsed(),
       snapshot: game.snapshot ? { board: game.snapshot.board, moves: game.snapshot.moves } : null,
       ts: Date.now()
     });
@@ -220,7 +197,8 @@
   /* ---------- 胜利 ---------- */
   function finishGame() {
     finished = true;
-    stopTimer();
+    timer.stop();
+    MGHaptics.success();
     storage.remove(SAVE_KEY); // 对局结束，清除存档
     var isRecord = best === 0 || game.moves < best;
     if (isRecord) {
@@ -232,15 +210,16 @@
     tilesEl.classList.add('celebrate');
     refreshStats(false);
     winMovesEl.textContent = game.moves + ' 步';
-    winTimeEl.textContent = formatTime(elapsed);
+    winTimeEl.textContent = MGShell.formatTime(timer.elapsed());
     winBestEl.textContent = best + ' 步';
     winRecordEl.style.display = isRecord ? '' : 'none';
-    setTimeout(function () { MGModal.open(winEl); }, 520); // 先看庆祝动效再弹窗
+    setTimeout(function () { MGModal.open(winEl); }, MGMotion.duration(520)); // 先看庆祝动效再弹窗（减少动态效果时立即弹出）
   }
 
   /* ---------- 游戏操作 ---------- */
   function afterMove(result) {
     if (!result.moved) return;
+    MGHaptics.light();
     startTimer(); // 首次移动启动计时
     renderSlide(result.tiles);
     refreshStats(true);
@@ -278,8 +257,7 @@
 
   function newGame() {
     finished = false;
-    stopTimer();
-    elapsed = 0;
+    timer.reset(0);
     game.reset();
     MGModal.close(winEl);
     renderAll(true);
@@ -294,48 +272,52 @@
     game = new HuarongDao(size);
     best = storage.get('best_' + size, 0);
     finished = false;
-    stopTimer();
-    elapsed = 0;
+    timer.reset(0);
     MGModal.close(winEl);
     renderAll(true);
     refreshStats(false);
     saveGame();
   }
 
-  /* ---------- 开始页 ---------- */
-  function syncStartSizeUI() {
-    var btns = startSizeGrid.querySelectorAll('button[data-size]');
-    for (var i = 0; i < btns.length; i++) {
-      btns[i].classList.toggle('active', Number(btns[i].dataset.size) === pendingSize);
+  /* ---------- 开始页（公共组件）：新局只允许 3–8，仍兼容恢复旧版 9×9、10×10 存档 ---------- */
+  var startScreen = MGShell.createStartScreen({
+    el: startScreenEl,
+    grid: startSizeGrid,
+    startBtn: btnStart,
+    homeBtn: btnStartHome,
+    allowed: NEW_SIZES,
+    fallback: 8,
+    storage: storage,
+    rememberKey: 'last_size',
+    // 打开前先保存进行中的对局并暂停计时（必须在开始页标记可见之前保存）
+    onBeforeShow: function () {
+      if (game.moves > 0 || timer.running()) saveGame();
+      timer.stop();
+    },
+    onStart: function (n) {
+      if (n === size) newGame();
+      else switchSize(n);
     }
-  }
+  });
 
-  function showStartScreen() {
-    if (!startScreenVisible && (game.moves > 0 || timerId !== null)) saveGame();
-    stopTimer();
-    startScreenVisible = true;
-    pendingSize = NEW_SIZES.indexOf(size) !== -1 ? size : 8;
-    syncStartSizeUI();
-    startScreenEl.classList.add('show');
-  }
-
-  function hideStartScreen() {
-    startScreenVisible = false;
-    startScreenEl.classList.remove('show');
-  }
-
-  /** 开始页开局：同尺寸重置当前局，异尺寸走 switchSize 完整换尺寸流程 */
-  function startGameWithSize(n) {
-    if (NEW_SIZES.indexOf(n) === -1) return;
-    hideStartScreen();
-    if (n === size) newGame();
-    else switchSize(n);
-  }
+  /* ---------- 设置弹窗（公共设置面板，含全局震动开关） ---------- */
+  var settingsPanel = MGShell.createSettingsPanel({
+    modal: settingsModal,
+    closeBtn: btnSettingsClose,
+    settings: settings,
+    schema: SETTINGS_SCHEMA,
+    storage: storage,
+    key: SETTINGS_KEY,
+    onChange: function (name, value) {
+      if (name === 'sensitivity') swipe.setThreshold(SENSITIVITY[value]);
+      else if (name === 'animSpeed') applyAnimSpeed();
+    }
+  });
 
   /* ---------- 手势：公共滑动识别器（触摸与鼠标统一处理） ---------- */
   function gestureBlocked(target) {
-    if (startScreenVisible) return true;
-    if (MGModal.isOpen(winEl) || MGModal.isOpen(settingsModal)) return true;
+    if (isStartVisible()) return true;
+    if (MGModal.isOpen(winEl) || settingsPanel.isOpen()) return true;
     return !!(target && target.closest && target.closest('button'));
   }
 
@@ -347,56 +329,18 @@
   });
 
   /* ---------- 键盘（浏览器调试用） ---------- */
-  var KEYMAP = {
-    ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
-    w: 'up', a: 'left', s: 'down', d: 'right',
-    W: 'up', A: 'left', S: 'down', D: 'right'
-  };
-  document.addEventListener('keydown', function (e) {
-    if (startScreenVisible) return;
-    if (MGModal.isOpen(settingsModal)) {
-      if (e.key === 'Escape') MGModal.close(settingsModal);
-      return;
-    }
-    if (MGModal.isOpen(winEl)) return;
-    var dir = KEYMAP[e.key];
-    if (dir) {
-      e.preventDefault();
-      doSlide(dir);
-    }
+  MGShell.bindKeys({
+    isBlocked: isStartVisible,
+    settings: settingsPanel,
+    overlays: [winEl],
+    onDirection: doSlide
   });
-
-  /* ---------- 设置弹窗 ---------- */
-  function syncSettingsUI() {
-    var groups = settingsModal.querySelectorAll('.setting-group');
-    for (var i = 0; i < groups.length; i++) {
-      var name = groups[i].dataset.setting;
-      var btns = groups[i].querySelectorAll('button[data-value]');
-      for (var j = 0; j < btns.length; j++) {
-        btns[j].classList.toggle('active', btns[j].dataset.value === String(settings[name]));
-      }
-    }
-  }
-
-  function setSetting(name, value) {
-    if (settings[name] === value) return;
-    settings[name] = value;
-    storage.set(SETTINGS_KEY, settings);
-    if (name === 'sensitivity') swipe.setThreshold(SENSITIVITY[value]);
-    else if (name === 'animSpeed') applyAnimSpeed();
-    syncSettingsUI();
-  }
 
   /* ---------- 按钮 ---------- */
-  btnHome.addEventListener('click', function () {
-    saveGame();
-    window.location.href = '../index.html';
-  });
-  btnNew.addEventListener('click', showStartScreen); // 新游戏先弹开始页选棋盘尺寸
+  btnHome.addEventListener('click', function () { MGShell.goHome(saveGame); });
+  btnNew.addEventListener('click', function () { startScreen.show(size); }); // 新游戏先弹开始页选棋盘尺寸
   btnWinRetry.addEventListener('click', newGame);    // 胜利弹窗：同尺寸直接重开
-  btnWinHome.addEventListener('click', function () {
-    window.location.href = '../index.html';
-  });
+  btnWinHome.addEventListener('click', function () { MGShell.goHome(); });
   btnUndo.addEventListener('click', function () {
     if (finished) return;
     if (game.undo()) {
@@ -406,46 +350,14 @@
       saveGame(); // 撤销回退棋盘与步数（用时继续累计）
     }
   });
-  btnSettings.addEventListener('click', function () {
-    syncSettingsUI();
-    MGModal.open(settingsModal);
-  });
-  btnSettingsClose.addEventListener('click', function () { MGModal.close(settingsModal); });
-  settingsModal.addEventListener('click', function (e) {
-    if (e.target === settingsModal) MGModal.close(settingsModal); // 点背板关闭
-  });
-  startSizeGrid.addEventListener('click', function (e) {
-    var btn = e.target.closest('button[data-size]');
-    if (!btn) return;
-    pendingSize = Number(btn.dataset.size);
-    storage.set('last_size', pendingSize); // 记住选择，下次启动开始页默认选中
-    syncStartSizeUI();
-  });
-  btnStart.addEventListener('click', function () {
-    startGameWithSize(pendingSize);
-  });
-  btnStartHome.addEventListener('click', function () {
-    window.location.href = '../index.html'; // 返回合集菜单（对局存档保留）
-  });
-
-  var settingGroups = settingsModal.querySelectorAll('.setting-group');
-  for (var i = 0; i < settingGroups.length; i++) {
-    (function (group) {
-      group.addEventListener('click', function (e) {
-        var btn = e.target.closest('button[data-value]');
-        if (btn) setSetting(group.dataset.setting, btn.dataset.value);
-      });
-    })(settingGroups[i]);
-  }
+  btnSettings.addEventListener('click', settingsPanel.open);
 
   /* ---------- 离开页面前补存进度 / 页面隐藏暂停计时 ---------- */
-  window.addEventListener('pagehide', saveGame);
-  document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'hidden') {
-      saveGame();
-      stopTimer();
-    } else if (!startScreenVisible && !finished && game.moves > 0) {
-      startTimer();
+  MGShell.bindLifecycle({
+    save: saveGame,
+    onHide: timer.stop,
+    onShow: function () {
+      if (!isStartVisible() && !finished && game.moves > 0) startTimer();
     }
   });
 
@@ -468,24 +380,24 @@
   applyAnimSpeed();
   if (save && game.restore(save)) {
     restored = true;
-    elapsed = Math.floor(save.elapsed) || 0;
+    timer.reset(save.elapsed);
   }
   refreshStats(false);
   renderAll(!restored); // 恢复存档不播出现动画，新局播放
   if (restored) {
     if (game.moves > 0) startTimer(); // 恢复进行中的对局继续计时
   } else {
-    showStartScreen(); // 无合法存档进开始页选尺寸
+    startScreen.show(size); // 无合法存档进开始页选尺寸
   }
 
   // 调试/自动化测试钩子
   window.__debugHuarong = {
     get game() { return game; },
     get settings() { return settings; },
-    get elapsed() { return elapsed; },
+    get elapsed() { return timer.elapsed(); },
     get best() { return best; },
     get finished() { return finished; },
-    get startVisible() { return startScreenVisible; },
+    get startVisible() { return isStartVisible(); },
     render: renderAll,
     doSlide: doSlide,
     doTap: doTap,

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#faf8ef">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%234d6b7d'/%3E%3Crect x='6' y='6' width='52' height='52' rx='6' fill='%23fbfaf6'/%3E%3Cpath d='M23.3 6v52M40.6 6v52M6 23.3h52M6 40.6h52' stroke='%234d6b7d' stroke-width='2.5'/%3E%3Cg font-family='Arial' font-size='13' font-weight='700' text-anchor='middle'%3E%3Ctext x='14.6' y='19.5' fill='%232f3b44'%3E5%3C/text%3E%3Ctext x='49.3' y='19.5' fill='%234a7fb0'%3E3%3C/text%3E%3Ctext x='32' y='36.8' fill='%232f3b44'%3E7%3C/text%3E%3Ctext x='14.6' y='54' fill='%234a7fb0'%3E9%3C/text%3E%3Ctext x='49.3' y='54' fill='%232f3b44'%3E1%3C/text%3E%3C/g%3E%3C/svg%3E">
+  <title>数独 · 小游戏合集</title>
+  <link rel="stylesheet" href="../css/common.css?v=1.3.0">
+  <link rel="stylesheet" href="../css/sudoku.css?v=1.3.0">
+</head>
+<body data-game="sudoku">
+  <div class="container">
+    <header class="header">
+      <h1 class="title">数独</h1>
+      <div class="stats">
+        <div class="stat-card stat-card--primary">
+          <span class="stat-label">难度</span>
+          <span class="stat-value" id="level">—</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">用时</span>
+          <span class="stat-value" id="time">00:00</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">最佳</span>
+          <span class="stat-value" id="best">—</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="controls">
+      <button type="button" id="btn-new" class="btn btn-primary">新游戏</button>
+      <button type="button" id="btn-home" class="btn btn-secondary">主页</button>
+      <button type="button" id="btn-undo" class="btn btn-secondary">撤销</button>
+      <button type="button" id="btn-settings" class="btn btn-secondary">设置</button>
+    </div>
+
+    <div class="board-wrap sd-wrap">
+      <div class="board sd-board" id="board" role="grid" aria-label="数独棋盘">
+        <div class="sd-status" id="sd-status" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div class="sd-pad" id="sd-pad" aria-label="数字键盘">
+      <button type="button" data-digit="1"><span class="pad-num">1</span><span class="pad-left"></span></button>
+      <button type="button" data-digit="2"><span class="pad-num">2</span><span class="pad-left"></span></button>
+      <button type="button" data-digit="3"><span class="pad-num">3</span><span class="pad-left"></span></button>
+      <button type="button" data-digit="4"><span class="pad-num">4</span><span class="pad-left"></span></button>
+      <button type="button" data-digit="5"><span class="pad-num">5</span><span class="pad-left"></span></button>
+      <button type="button" data-action="note" class="pad-tool" aria-pressed="false">
+        <span class="pad-tool-icon pad-tool-icon--note" aria-hidden="true"></span><span class="pad-tool-label">笔记</span>
+      </button>
+      <button type="button" data-digit="6"><span class="pad-num">6</span><span class="pad-left"></span></button>
+      <button type="button" data-digit="7"><span class="pad-num">7</span><span class="pad-left"></span></button>
+      <button type="button" data-digit="8"><span class="pad-num">8</span><span class="pad-left"></span></button>
+      <button type="button" data-digit="9"><span class="pad-num">9</span><span class="pad-left"></span></button>
+      <button type="button" data-action="erase" class="pad-tool pad-tool--wide">
+        <span class="pad-tool-icon pad-tool-icon--erase" aria-hidden="true"></span><span class="pad-tool-label">擦除</span>
+      </button>
+    </div>
+
+    <p class="hint" id="hint">点选空格后输入数字；笔记模式可记录候选数</p>
+  </div>
+
+  <!-- 胜利 -->
+  <div class="modal-backdrop" id="result-modal">
+    <div class="modal-card overlay-card">
+      <div class="overlay-title">完成！</div>
+      <div class="win-record" id="result-record">新纪录</div>
+      <div class="win-stats">
+        <div class="win-stat">
+          <span>难度</span>
+          <span class="win-stat-value" id="result-level">—</span>
+        </div>
+        <div class="win-stat">
+          <span>用时</span>
+          <span class="win-stat-value" id="result-time">00:00</span>
+        </div>
+        <div class="win-stat">
+          <span>最佳成绩</span>
+          <span class="win-stat-value" id="result-best">—</span>
+        </div>
+      </div>
+      <div class="overlay-buttons">
+        <button type="button" id="btn-result-retry" class="btn btn-primary">再来一局</button>
+        <button type="button" id="btn-result-home" class="btn btn-secondary">返回菜单</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置 -->
+  <div class="modal-backdrop" id="settings-modal">
+    <div class="modal-card settings-card">
+      <h2 class="modal-title">设置</h2>
+
+      <div class="setting-group" data-setting="highlightSame">
+        <div class="setting-label">高亮相同数字</div>
+        <div class="setting-options">
+          <button type="button" data-value="on">开启</button>
+          <button type="button" data-value="off">关闭</button>
+        </div>
+      </div>
+
+      <div class="setting-group" data-setting="autoNotes">
+        <div class="setting-label">填数后自动清除相关笔记</div>
+        <div class="setting-options">
+          <button type="button" data-value="on">开启</button>
+          <button type="button" data-value="off">关闭</button>
+        </div>
+      </div>
+
+      <button type="button" id="btn-settings-close" class="btn btn-primary modal-close">完成</button>
+    </div>
+  </div>
+
+  <!-- 开始页：选择难度 -->
+  <div class="start-screen" id="start-screen">
+    <div class="start-inner">
+      <div class="sd-logo" aria-hidden="true">
+        <span class="given">5</span><span></span><span>3</span>
+        <span></span><span class="given">7</span><span></span>
+        <span>9</span><span></span><span class="given">1</span>
+      </div>
+      <h1 class="start-title">数独</h1>
+      <p class="start-subtitle">选择难度，每局随机生成且只有唯一解</p>
+      <div class="start-size-grid" id="start-level-grid">
+        <button type="button" data-level="easy"><span class="size-num">简单</span><span class="size-label">约 39 个提示</span></button>
+        <button type="button" data-level="medium"><span class="size-num">中等</span><span class="size-label">约 31 个提示</span></button>
+        <button type="button" data-level="hard"><span class="size-num">困难</span><span class="size-label">约 25 个提示</span></button>
+      </div>
+      <button type="button" id="btn-start" class="btn btn-primary start-btn">开始游戏</button>
+      <button type="button" id="btn-start-home" class="btn btn-secondary start-back">返回菜单</button>
+    </div>
+  </div>
+
+  <script src="../js/common/storage.js?v=1.3.0"></script>
+  <script src="../js/common/modal.js?v=1.3.0"></script>
+  <script src="../js/common/motion.js?v=1.3.0"></script>
+  <script src="../js/common/prefs.js?v=1.3.0"></script>
+  <script src="../js/common/haptics.js?v=1.3.0"></script>
+  <script src="../js/common/shell.js?v=1.3.0"></script>
+  <script src="../js/sudoku.js?v=1.3.0"></script>
+  <script src="../js/sudoku-main.js?v=1.3.0"></script>
+</body>
+</html>

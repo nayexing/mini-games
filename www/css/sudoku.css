@@ -1,0 +1,333 @@
+/* ========== 数独专属样式：雾蓝强调色 / 宫格粗细线 / 高亮与冲突 / 笔记 / 数字键盘 / 开始页 logo ========== */
+body[data-game="sudoku"] {
+  --c-accent: #4d6b7d;
+  --c-board: #4d6b7d;          /* 宫与宫之间的粗线 */
+  --sd-thin: #c9d4dc;          /* 宫内细线 */
+  --sd-cell: #fbfaf6;
+  --sd-peer: #edf2f5;
+  --sd-same: #d6e2ea;
+  --sd-selected: #b9cfdf;
+  --sd-given: #2f3b44;
+  --sd-user: #3f76a8;
+  --sd-conflict: #d9534f;
+}
+
+body[data-game="sudoku"] .container {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* ---- 棋盘：外层 3×3 宫（粗线）→ 每宫 3×3 格（细线） ---- */
+.sd-wrap {
+  margin-top: var(--space-3);
+  padding-bottom: 0;
+}
+
+.sd-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 2px;
+  padding: 2px;
+  width: min(100%, calc(100vh - 372px));
+  width: min(100%, calc(100dvh - 372px));
+  min-width: 240px;
+  container-type: inline-size;
+  touch-action: manipulation;
+}
+
+.sd-box {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 1px;
+  overflow: hidden;
+  background: var(--sd-thin);
+}
+
+/* 四角宫随棋盘外框圆角 */
+.sd-box[data-b="0"] { border-top-left-radius: calc(var(--r-lg) - 3px); }
+.sd-box[data-b="2"] { border-top-right-radius: calc(var(--r-lg) - 3px); }
+.sd-box[data-b="6"] { border-bottom-left-radius: calc(var(--r-lg) - 3px); }
+.sd-box[data-b="8"] { border-bottom-right-radius: calc(var(--r-lg) - 3px); }
+
+.sd-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  background: var(--sd-cell);
+  color: var(--sd-user);
+  font-size: calc(100cqw / 9 * 0.56);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+
+.sd-cell.is-given {
+  color: var(--sd-given);
+  font-weight: 700;
+}
+
+.sd-cell.is-peer { background: var(--sd-peer); }
+.sd-cell.is-same { background: var(--sd-same); }
+.sd-cell.is-selected { background: var(--sd-selected); }
+
+.sd-cell.is-conflict {
+  color: var(--sd-conflict);
+}
+
+.sd-cell.is-conflict:not(.is-given) {
+  background-image: linear-gradient(rgba(217, 83, 79, 0.12), rgba(217, 83, 79, 0.12));
+}
+
+.sd-value.pop-in {
+  animation: pop var(--dur-base) var(--ease-spring);
+}
+
+/* 笔记：3×3 小字候选数 */
+.sd-notes {
+  position: absolute;
+  inset: 6%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  color: #6f8594;
+  font-size: calc(100cqw / 9 * 0.26);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.sd-notes span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  visibility: hidden;
+}
+
+.sd-notes span.on {
+  visibility: visible;
+}
+
+.sd-notes span.is-match {
+  color: var(--sd-user);
+  font-weight: 800;
+}
+
+/* 生成中 / 空盘提示 */
+.sd-status {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-lg);
+  background: rgba(251, 250, 246, 0.82);
+  color: var(--c-accent);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.sd-board.is-generating .sd-status {
+  display: flex;
+}
+
+/* ---- 数字键盘：两行，1–5 + 笔记 / 6–9 + 擦除 ---- */
+.sd-pad {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: var(--space-3);
+}
+
+.sd-pad button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 50px;
+  padding: 4px 0;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+  color: var(--c-accent);
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: var(--shadow-1);
+  transition: transform var(--dur-fast) var(--ease-out), background-color var(--dur-fast) ease, color var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.sd-pad button:active {
+  transform: scale(0.94);
+}
+
+.pad-num {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.pad-left {
+  color: var(--c-text-soft);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.sd-pad button.is-done {
+  opacity: 0.35;
+}
+
+.pad-tool {
+  color: var(--c-text) !important;
+  background: var(--c-surface-soft) !important;
+}
+
+.pad-tool--wide {
+  grid-column: span 2;
+  flex-direction: row !important;
+  gap: 6px !important;
+}
+
+.pad-tool[aria-pressed="true"] {
+  border-color: var(--c-accent);
+  background: var(--c-accent) !important;
+  color: var(--c-text-invert) !important;
+}
+
+.pad-tool-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pad-tool-icon {
+  position: relative;
+  width: 16px;
+  height: 16px;
+}
+
+/* 笔记图标：小铅笔 */
+.pad-tool-icon--note::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: -1px;
+  width: 4px;
+  height: 15px;
+  border-radius: 1px;
+  background: currentColor;
+  transform: rotate(40deg);
+}
+
+.pad-tool-icon--note::after {
+  content: '';
+  position: absolute;
+  left: 1px;
+  bottom: 0;
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+/* 擦除图标：橡皮 */
+.pad-tool-icon--erase::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 4px;
+  width: 12px;
+  height: 8px;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+  transform: rotate(-35deg);
+}
+
+.pad-tool-icon--erase::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  bottom: 0;
+  width: 12px;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+/* ---- 开始页 ---- */
+body[data-game="sudoku"] .size-label {
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+
+.sd-logo {
+  display: grid;
+  grid-template-columns: repeat(3, 38px);
+  grid-auto-rows: 38px;
+  gap: 2px;
+  padding: 4px;
+  background: var(--c-accent);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-2);
+  animation: logoPop var(--dur-slow) var(--ease-out);
+}
+
+.sd-logo span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  background: var(--sd-cell);
+  color: var(--sd-user);
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.sd-logo .given {
+  color: var(--sd-given);
+  font-weight: 700;
+}
+
+@media (max-height: 620px) {
+  .sd-board {
+    width: min(100%, calc(100vh - 300px));
+    width: min(100%, calc(100dvh - 300px));
+    min-width: 200px;
+  }
+
+  .sd-pad {
+    margin-top: var(--space-2);
+    gap: 4px;
+  }
+
+  .sd-pad button {
+    min-height: 40px;
+  }
+
+  .pad-num {
+    font-size: 18px;
+  }
+
+  .sd-logo {
+    grid-template-columns: repeat(3, 30px);
+    grid-auto-rows: 30px;
+  }
+
+  .sd-logo span {
+    font-size: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-pad button:active {
+    transform: none;
+  }
+}

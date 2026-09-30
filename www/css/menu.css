@@ -14,15 +14,16 @@
   grid-auto-rows: 52px;
   gap: 7px;
   padding: 9px;
-  background: var(--board-bg);
-  border-radius: 14px;
+  background: var(--c-board);
+  border-radius: var(--r-lg);
   width: fit-content;
   margin: 0 auto;
-  animation: logoPop 0.4s ease;
+  box-shadow: var(--shadow-2);
+  animation: logoPop var(--dur-slow) var(--ease-out);
 }
 
 .menu-logo-tile {
-  border-radius: 8px;
+  border-radius: var(--r-sm);
 }
 
 .menu-logo-tile.c1 { background: #eee4da; }
@@ -32,6 +33,7 @@
 
 .menu-title {
   margin: 24px 0 0;
+  color: var(--c-text);
   font-size: 40px;
   font-weight: 700;
   line-height: 1;
@@ -40,114 +42,215 @@
 .menu-sub {
   margin: 10px 0 0;
   font-size: 14px;
-  color: var(--hint);
+  color: var(--c-text-soft);
 }
 
-/* ---- 游戏卡片网格 ---- */
+/* ---- 游戏卡片网格：2×2 ---- */
 .game-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
-  margin-top: 36px;
+  margin-top: 32px;
 }
 
 .game-card {
+  --card-accent: var(--c-primary);
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  padding: 22px 12px 18px;
-  background: #fff;
-  border: 2px solid rgba(187, 173, 160, 0.45);
-  border-radius: 14px;
+  min-width: 0;
+  padding: 20px 10px 16px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
   cursor: pointer;
   font-family: inherit;
-  color: var(--text);
+  color: var(--c-text);
   text-decoration: none;
-  transition: transform 0.08s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-base) ease, border-color var(--dur-base) ease;
 }
 
 .game-card:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
 }
 
 @media (hover: hover) {
   .game-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 24px rgba(119, 110, 101, 0.18);
-    border-color: var(--board-bg);
+    box-shadow: var(--shadow-2);
+    border-color: var(--c-board);
   }
 }
 
-/* 卡片图形标识：2048 四宫格 */
-.card-logo-2048 {
+/* ---- 卡片图形标识：四款游戏统一外框 68px ---- */
+.card-logo {
   display: grid;
-  grid-template-columns: repeat(2, 26px);
-  grid-auto-rows: 26px;
-  gap: 4px;
-  padding: 5px;
-  background: var(--board-bg);
-  border-radius: 8px;
-}
-
-.card-logo-2048 span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-/* 卡片图形标识：华容道 3×3 迷你盘 */
-.card-logo-hr {
-  display: grid;
-  grid-template-columns: repeat(3, 18px);
-  grid-auto-rows: 18px;
   gap: 3px;
   padding: 4px;
-  background: var(--board-bg);
-  border-radius: 8px;
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-1);
 }
 
-.card-logo-hr span {
+.card-logo span {
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 3px;
-  background: var(--hr-wood);
-  color: #6B4F2E;
   font-size: 9px;
   font-weight: 700;
+  line-height: 1;
+}
+
+/* 2048 四宫格 */
+.card-logo-2048 {
+  grid-template-columns: repeat(2, 27px);
+  grid-auto-rows: 27px;
+  gap: 4px;
+  padding: 5px;
+  background: var(--c-board);
+}
+
+.card-logo-2048 span {
+  border-radius: var(--r-xs);
+  font-size: 12px;
+}
+
+.card-logo-2048 .l2 { background: #eee4da; color: #776e65; }
+.card-logo-2048 .l0 { background: #ede0c8; color: #776e65; }
+.card-logo-2048 .l4 { background: #f2b179; color: #f9f6f2; }
+.card-logo-2048 .l8 { background: #f59563; color: #f9f6f2; }
+
+/* 华容道 3×3 迷你盘 */
+.card-logo-hr {
+  grid-template-columns: repeat(3, 18px);
+  grid-auto-rows: 18px;
+  background: #aa927e;
+}
+
+.card-logo-hr span {
+  background: var(--hr-wood);
+  color: #6b4f2e;
 }
 
 .card-logo-hr span.hr-blank {
   background: transparent;
 }
 
+/* 扫雷 3×3：凸起未翻开格、平面已翻开格、数字与小旗 */
+.card-logo-ms {
+  grid-template-columns: repeat(3, 18px);
+  grid-auto-rows: 18px;
+  background: #8fa391;
+}
+
+.card-logo-ms .closed,
+.card-logo-ms .flag {
+  background: #dfe6dc;
+  box-shadow: inset 0 -2px 0 rgba(52, 72, 55, 0.18);
+}
+
+.card-logo-ms .open { background: #f6f3ea; }
+.card-logo-ms .n1 { color: #4a7fb0; }
+.card-logo-ms .n2 { color: #4e9a6a; }
+
+.card-logo-ms .flag {
+  position: relative;
+}
+
+.card-logo-ms .flag::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 4px;
+  width: 1.5px;
+  height: 10px;
+  background: #594330;
+}
+
+.card-logo-ms .flag::after {
+  content: '';
+  position: absolute;
+  left: 8.5px;
+  top: 4px;
+  border-left: 6px solid #d9534f;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+}
+
+/* 数独 3×3：给定数字深色，填入数字雾蓝 */
+.card-logo-sd {
+  grid-template-columns: repeat(3, 18px);
+  grid-auto-rows: 18px;
+  gap: 1px;
+  padding: 3px;
+  background: #4d6b7d;
+}
+
+.card-logo-sd span {
+  border-radius: 1px;
+  background: #fbfaf6;
+  color: #4a7fb0;
+  font-size: 10px;
+}
+
+.card-logo-sd .given { color: #2f3b44; }
+
 .card-name {
   font-size: 17px;
   font-weight: 700;
 }
 
-.card-desc {
+/* ---- 卡片状态行：简介 / 最佳成绩 / 继续进度 ---- */
+.card-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 6px;
+  min-height: 36px;
+  max-width: 100%;
   font-size: 12px;
-  color: var(--hint);
-  text-align: center;
   line-height: 1.5;
+  color: var(--c-text-soft);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.card-status.is-best {
+  color: var(--c-text-body);
+  font-weight: 600;
+}
+
+.card-status.is-resume {
+  color: var(--c-text);
+  font-weight: 600;
+}
+
+.card-badge {
+  flex: none;
+  padding: 1px 8px;
+  border-radius: var(--r-pill);
+  background: var(--card-accent);
+  color: var(--c-text-invert);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
 }
 
 /* ---- 页脚 ---- */
 .menu-footer {
   margin-top: auto;
-  padding-top: 24px;
+  padding-top: var(--space-6);
   text-align: center;
   font-size: 12px;
-  color: var(--hint);
+  color: var(--c-text-soft);
 }
 
-/* ---- 窄屏：单列卡片 ---- */
-@media (max-width: 380px) {
+/* ---- 极窄屏：单列卡片 ---- */
+@media (max-width: 320px) {
   .game-grid {
     grid-template-columns: 1fr;
   }
@@ -168,7 +271,7 @@
 
   .menu-title {
     font-size: 30px;
-    margin-top: 16px;
+    margin-top: var(--space-4);
   }
 
   .game-grid {
@@ -178,10 +281,17 @@
 
   .game-card {
     padding: 14px 10px 12px;
-    gap: 8px;
+    gap: var(--space-2);
   }
 
   .menu-footer {
     padding-top: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-card:active,
+  .game-card:hover {
+    transform: none;
   }
 }

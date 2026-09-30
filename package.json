@@ -1,12 +1,15 @@
 {
   "name": "mini-games",
   "private": true,
-  "version": "1.1.0",
-  "description": "Mini games collection (2048 + Huarong Dao) packaged as Android APK via Capacitor",
+  "version": "1.3.0",
+  "description": "Mini games collection (2048 + Huarong Dao + Minesweeper + Sudoku) packaged as Android APK via Capacitor",
   "scripts": {
+    "pretest": "node scripts/sync-version.mjs --check",
     "test": "node --test tests/*.test.js",
+    "version:sync": "node scripts/sync-version.mjs",
     "sync": "cap sync",
-    "build:apk": "cd android && ./gradlew assembleDebug"
+    "build:apk": "cd android && ./gradlew assembleDebug",
+    "build:apk:release": "bash scripts/build-release-apk.sh"
   },
   "devDependencies": {
     "@capacitor/android": "^8.5.0",

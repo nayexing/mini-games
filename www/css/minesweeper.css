@@ -1,0 +1,339 @@
+/* ========== 扫雷专属样式：灰绿苔色 / 翻开插旗切换 / 可滚动棋盘 / 格子状态 / 开始页 logo ========== */
+body[data-game="minesweeper"] {
+  --c-accent: #5e7d62;
+  --c-board: #8fa391;
+  --ms-closed: #dfe6dc;
+  --ms-closed-edge: rgba(52, 72, 55, 0.2);
+  --ms-open: #f6f3ea;
+  --ms-cell: 32px;           /* 由 JS 按屏幕宽度与列数计算 */
+}
+
+/* 页面高度固定为一屏：高级盘在棋盘区域内滚动，而不是整页滚动 */
+body[data-game="minesweeper"] .container {
+  height: 100vh;
+  height: 100dvh;
+  padding-left: calc(10px + env(safe-area-inset-left));
+  padding-right: calc(10px + env(safe-area-inset-right));
+}
+
+body[data-game="minesweeper"] .header,
+body[data-game="minesweeper"] .controls,
+body[data-game="minesweeper"] .mode-switch {
+  margin-left: 6px;
+  margin-right: 6px;
+}
+
+/* ---- 翻开 / 插旗 切换 ---- */
+.mode-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: var(--space-3);
+  padding: 4px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-surface-soft);
+}
+
+.mode-switch button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--c-text-body);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+
+.mode-switch button.active {
+  background: var(--c-surface);
+  color: var(--c-accent);
+  box-shadow: var(--shadow-1);
+}
+
+.mode-switch button[data-mode="flag"].active {
+  background: var(--c-accent);
+  color: var(--c-text-invert);
+}
+
+.mode-icon {
+  position: relative;
+  width: 14px;
+  height: 14px;
+}
+
+.mode-icon--reveal {
+  border-radius: 3px;
+  background: var(--ms-open);
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
+.mode-icon--flag::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 0;
+  width: 2px;
+  height: 14px;
+  background: currentColor;
+}
+
+.mode-icon--flag::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 0;
+  border-left: 8px solid var(--c-danger);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+}
+
+/* ---- 棋盘区域：内容小于区域时居中，大于区域时在区域内双向滚动 ---- */
+.ms-wrap {
+  margin-top: var(--space-3);
+  padding-bottom: 2vh;
+  overflow: hidden;
+}
+
+.ms-scroll {
+  max-width: 100%;
+  max-height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;   /* 允许在棋盘内滚动（页面其余部分禁用滚动） */
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-2);
+}
+
+.ms-board {
+  display: grid;
+  grid-template-columns: repeat(var(--ms-cols, 9), var(--ms-cell));
+  grid-auto-rows: var(--ms-cell);
+  gap: 1px;
+  padding: 3px;
+  width: max-content;
+  background: var(--c-board);
+  border-radius: var(--r-lg);
+  touch-action: pan-x pan-y;
+}
+
+.ms-board.celebrate {
+  animation: boardGlow calc(var(--dur-slow) * 2) var(--ease-out);
+}
+
+/* ---- 格子 ---- */
+.ms-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  background: var(--ms-closed);
+  box-shadow: inset 0 -2px 0 var(--ms-closed-edge), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  color: var(--c-text);
+  font-size: calc(var(--ms-cell) * 0.56);
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  transition: background-color var(--dur-fast) ease;
+}
+
+.ms-cell.is-pressing {
+  background: #cfd8cb;
+}
+
+.ms-cell.is-open {
+  background: var(--ms-open);
+  box-shadow: none;
+  cursor: default;
+}
+
+.ms-cell.is-open.has-count {
+  cursor: pointer;
+}
+
+/* 数字配色：经典色的低饱和版本 */
+.ms-cell.n1 { color: #4a7fb0; }
+.ms-cell.n2 { color: #4e9a6a; }
+.ms-cell.n3 { color: #d9534f; }
+.ms-cell.n4 { color: #5b4b8a; }
+.ms-cell.n5 { color: #9a5b3c; }
+.ms-cell.n6 { color: #3f8f8f; }
+.ms-cell.n7 { color: #594330; }
+.ms-cell.n8 { color: #8a8a8a; }
+
+/* 旗子：旗杆 + 三角旗面（纯 CSS，随格子大小缩放） */
+.ms-cell.is-flag::before,
+.ms-cell.is-wrong::before {
+  content: '';
+  position: absolute;
+  left: 38%;
+  top: 22%;
+  width: max(1.5px, calc(var(--ms-cell) * 0.07));
+  height: 56%;
+  background: #594330;
+}
+
+.ms-cell.is-flag::after,
+.ms-cell.is-wrong::after {
+  content: '';
+  position: absolute;
+  left: calc(38% + max(1.5px, calc(var(--ms-cell) * 0.07)));
+  top: 22%;
+  border-left: calc(var(--ms-cell) * 0.32) solid var(--c-danger);
+  border-top: calc(var(--ms-cell) * 0.13) solid transparent;
+  border-bottom: calc(var(--ms-cell) * 0.13) solid transparent;
+}
+
+.ms-cell.is-flag.pop-in {
+  animation: pop var(--dur-base) var(--ease-spring);
+}
+
+/* 失败揭示：地雷、被踩的雷、插错的旗 */
+.ms-cell.is-mine {
+  background: var(--ms-open);
+  box-shadow: none;
+}
+
+.ms-cell.is-mine::before {
+  content: '';
+  position: absolute;
+  inset: 26%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #8a7766 0 18%, #3b352e 20% 100%);
+  box-shadow: 0 0 0 max(1px, calc(var(--ms-cell) * 0.05)) rgba(59, 53, 46, 0.25);
+}
+
+.ms-cell.is-exploded {
+  background: var(--c-danger);
+  animation: shake calc(var(--dur-base) * 1.5) ease;
+}
+
+.ms-cell.is-wrong {
+  background: #f1e1dc;
+}
+
+.ms-cell.is-wrong::before,
+.ms-cell.is-wrong::after {
+  opacity: 0.45;
+}
+
+.ms-cell.is-wrong > .ms-cross {
+  position: absolute;
+  inset: 18%;
+  background:
+    linear-gradient(45deg, transparent 44%, var(--c-danger) 44% 56%, transparent 56%),
+    linear-gradient(-45deg, transparent 44%, var(--c-danger) 44% 56%, transparent 56%);
+}
+
+/* 插旗模式下给棋盘描边提示当前点按会插旗 */
+body.flag-mode .ms-scroll {
+  box-shadow: 0 0 0 2px var(--c-accent), var(--shadow-2);
+}
+
+/* ---- 结果弹窗 ---- */
+.result-note {
+  margin: 10px 0 0;
+  color: var(--c-text-soft);
+  font-size: 13px;
+}
+
+.result-note:empty {
+  display: none;
+}
+
+/* ---- 开始页：三档难度一行三列，logo 为 3×3 迷你扫雷 ---- */
+body[data-game="minesweeper"] .start-size-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+body[data-game="minesweeper"] .size-label {
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+
+.ms-logo {
+  display: grid;
+  grid-template-columns: repeat(3, 38px);
+  grid-auto-rows: 38px;
+  gap: 4px;
+  padding: 6px;
+  background: var(--c-board);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-2);
+  animation: logoPop var(--dur-slow) var(--ease-out);
+}
+
+.ms-logo span {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.ms-logo .open { background: var(--ms-open); }
+.ms-logo .closed,
+.ms-logo .flag {
+  background: var(--ms-closed);
+  box-shadow: inset 0 -3px 0 var(--ms-closed-edge);
+}
+.ms-logo .n1 { color: #4a7fb0; }
+.ms-logo .n2 { color: #4e9a6a; }
+
+.ms-logo .flag::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 8px;
+  width: 3px;
+  height: 22px;
+  background: #594330;
+}
+
+.ms-logo .flag::after {
+  content: '';
+  position: absolute;
+  left: 17px;
+  top: 8px;
+  border-left: 12px solid var(--c-danger);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+}
+
+@media (max-height: 620px) {
+  .mode-switch {
+    margin-top: var(--space-2);
+  }
+
+  .mode-switch button {
+    min-height: 32px;
+  }
+
+  .ms-wrap {
+    margin-top: var(--space-2);
+  }
+
+  .ms-logo {
+    grid-template-columns: repeat(3, 30px);
+    grid-auto-rows: 30px;
+  }
+
+  .ms-logo span {
+    font-size: 14px;
+  }
+
+  .ms-logo .flag::before { left: 11px; top: 6px; height: 18px; }
+  .ms-logo .flag::after { left: 14px; top: 6px; }
+}

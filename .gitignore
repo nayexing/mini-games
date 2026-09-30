@@ -7,10 +7,15 @@ android/build/
 android/app/build/
 android/local.properties
 android/.idea/
-*.keystore
 
-# APK 安装包（通过 GitHub Releases 发布，不入库）
+# 签名密钥与配置（只保存在本机 ~/.minigames-signing，绝不入库）
+*.keystore
+*.jks
+keystore.properties
+
+# 安装包（通过 GitHub Releases 发布，不入库）
 *.apk
+*.aab
 
 # 助手工作数据
 .codebuddy/

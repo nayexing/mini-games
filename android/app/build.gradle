@@ -1,4 +1,26 @@
+import groovy.json.JsonSlurper
+
 apply plugin: 'com.android.application'
+
+// 版本号唯一来源：仓库根目录 package.json（MAJOR.MINOR.PATCH → versionCode = MAJOR*10000 + MINOR*100 + PATCH）
+def appVersionName = new JsonSlurper().parse(rootProject.file('../package.json')).version as String
+if (!(appVersionName ==~ /\d+\.\d+\.\d+/)) {
+    throw new GradleException("package.json version must be MAJOR.MINOR.PATCH, got: ${appVersionName}")
+}
+def appVersionParts = appVersionName.tokenize('.').collect { it as int }
+if (appVersionParts[1] > 99 || appVersionParts[2] > 99) {
+    throw new GradleException("MINOR and PATCH must be <= 99 to keep versionCode monotonic, got: ${appVersionName}")
+}
+def appVersionCode = appVersionParts[0] * 10000 + appVersionParts[1] * 100 + appVersionParts[2]
+
+// 正式签名只从环境变量读取（由 scripts/build-release-apk.sh 从本机钥匙串注入），仓库内不保存任何密钥
+def releaseSigning = [
+    storeFile    : System.getenv('MG_RELEASE_STORE_FILE'),
+    storePassword: System.getenv('MG_RELEASE_STORE_PASSWORD'),
+    keyAlias     : System.getenv('MG_RELEASE_KEY_ALIAS'),
+    keyPassword  : System.getenv('MG_RELEASE_KEY_PASSWORD')
+]
+def hasReleaseSigning = releaseSigning.values().every { it } && new File(releaseSigning.storeFile).isFile()
 
 android {
     namespace = "com.example.game2048"
@@ -7,8 +29,8 @@ android {
         applicationId "com.example.minigames"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
-        versionName "1.2"
+        versionCode appVersionCode
+        versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,11 +38,29 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile new File(releaseSigning.storeFile)
+                storePassword releaseSigning.storePassword
+                keyAlias releaseSigning.keyAlias
+                keyPassword releaseSigning.keyPassword
+            }
+        }
+    }
     buildTypes {
         release {
+            if (hasReleaseSigning) signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+}
+
+// 缺少签名环境变量时仍可构建 Debug；只有打包 Release 时才明确失败，避免产出未签名的正式包
+gradle.taskGraph.whenReady { graph ->
+    if (graph.hasTask(':app:packageRelease') && !hasReleaseSigning) {
+        throw new GradleException('Release signing is not configured. Run scripts/build-release-apk.sh or set MG_RELEASE_STORE_FILE, MG_RELEASE_STORE_PASSWORD, MG_RELEASE_KEY_ALIAS and MG_RELEASE_KEY_PASSWORD.')
     }
 }
 
